@@ -26,16 +26,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.apache.isis.applib.services.repository.RepositoryService;
-import org.apache.isis.extensions.fixtures.fixturescripts.FixtureScripts;
+import org.apache.isis.core.config.presets.IsisPresets;
 import org.apache.isis.testdomain.Smoketest;
 import org.apache.isis.testdomain.conf.Configuration_usingJdo;
-import org.apache.isis.testdomain.jdo.Book;
 import org.apache.isis.testdomain.jdo.JdoTestDomainPersona;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.apache.isis.testdomain.jdo.entities.JdoBook;
+import org.apache.isis.testing.fixtures.applib.fixturescripts.FixtureScripts;
 
 /**
  * These tests use the {@code @Transactional} annotation as provided by Spring.
@@ -46,12 +48,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest(
         classes = { 
                 Configuration_usingJdo.class,
-        }, 
-        properties = {
-                "logging.config=log4j2-test.xml",
-                //IsisPresets.DebugPersistence,
         })
 @Transactional
+@TestPropertySource(IsisPresets.UseLog4j2Test)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class TransactionRollbackTest_usingTransactional {
     
@@ -68,12 +67,12 @@ class TransactionRollbackTest_usingTransactional {
     void happyCaseTx_shouldCommit() {
         
         // expected pre condition
-        assertEquals(0, repository.allInstances(Book.class).size());
+        assertEquals(0, repository.allInstances(JdoBook.class).size());
             
         fixtureScripts.runPersona(JdoTestDomainPersona.InventoryWith1Book);
         
         // expected post condition
-        assertEquals(1, repository.allInstances(Book.class).size());
+        assertEquals(1, repository.allInstances(JdoBook.class).size());
         
     }
     
@@ -81,7 +80,7 @@ class TransactionRollbackTest_usingTransactional {
     void previousTest_shouldHaveBeenRolledBack() {
         
         // expected condition
-        assertEquals(0, repository.allInstances(Book.class).size());
+        assertEquals(0, repository.allInstances(JdoBook.class).size());
     }
 
 }

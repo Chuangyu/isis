@@ -18,12 +18,13 @@
 	<artifactId>isis-all</artifactId>
 	<version>2.0.0-M3-SNAPSHOT</version>
 
+
 	<packaging>pom</packaging>
 
 	<name>Apache Isis (Aggregator)</name>
 	<description>
         Convenience aggregator POM that references all modules.
-        The parent POM of all modules is core/pom.xml
+        The parent POM of the core framework is core-parent/pom.xml
     </description>
 
 	<scm>
@@ -39,25 +40,5 @@
 		<module>examples/demo</module>
 		<module>examples/smoketests</module>
 	</modules>
-
-	<profiles>
-		<profile>
-			<id>examples</id>
-			<activation>
-				<!--
-				only include within IDE as a convenience
-				-->
-				<property>
-					<name>idea.version</name>
-				</property>
-			</activation>
-			<modules>
-				<module>mixins</module>
-				<module>core</module>
-				<module>examples</module>
-			</modules>
-		</profile>
-
-	</profiles>
 
 </project>

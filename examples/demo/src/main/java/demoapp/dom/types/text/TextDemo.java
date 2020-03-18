@@ -27,13 +27,16 @@ import javax.xml.bind.annotation.XmlType;
 import org.apache.isis.applib.annotation.DomainObject;
 import org.apache.isis.applib.annotation.Editing;
 import org.apache.isis.applib.annotation.Nature;
+import org.apache.isis.applib.annotation.Optionality;
 import org.apache.isis.applib.annotation.Property;
 import org.apache.isis.applib.annotation.PropertyLayout;
+import org.apache.isis.applib.value.Password;
 
-import demoapp.utils.DemoStub;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
+
+import demoapp.utils.DemoStub;
 
 @XmlRootElement(name = "Demo")
 @XmlType
@@ -56,10 +59,10 @@ public class TextDemo extends DemoStub {
 
     // -- EDITABLE
 
-    @Property(editing=Editing.ENABLED) //TODO should not be required, https://issues.apache.org/jira/browse/ISIS-1970
+    @Property
     @XmlElement @Getter @Setter private String string;
 
-    @Property(editing=Editing.ENABLED) //TODO should not be required, https://issues.apache.org/jira/browse/ISIS-1970
+    @Property
     @PropertyLayout(multiLine=3)
     @XmlElement @Getter @Setter private String stringMultiline;
 
@@ -72,4 +75,10 @@ public class TextDemo extends DemoStub {
     @PropertyLayout(multiLine=3)
     @XmlElement @Getter @Setter private String stringMultilineReadonly;
 
+    // -- MASKED
+    
+    @Property(optionality = Optionality.OPTIONAL)
+    @XmlElement @Getter @Setter private Password secret;
+    
+    
 }

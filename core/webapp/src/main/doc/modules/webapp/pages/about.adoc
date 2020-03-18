@@ -1,4 +1,0 @@
-= Runtime Web
-include::_attributes.adoc[]
-
-

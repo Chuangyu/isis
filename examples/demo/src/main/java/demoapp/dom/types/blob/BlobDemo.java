@@ -30,15 +30,18 @@ import org.apache.isis.applib.annotation.Editing;
 import org.apache.isis.applib.annotation.Nature;
 import org.apache.isis.applib.annotation.Property;
 import org.apache.isis.applib.annotation.PropertyLayout;
+import org.apache.isis.applib.util.JaxbAdapters;
 import org.apache.isis.applib.value.Blob;
-import org.apache.isis.commons.internal.base._Bytes;
-import org.apache.isis.commons.internal.resources._Resources;
+import org.apache.isis.applib.value.NamedWithMimeType.CommonMimeType;
+import org.apache.isis.core.commons.internal.base._Bytes;
+import org.apache.isis.core.commons.internal.resources._Resources;
 
-import demoapp.utils.DemoStub;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
 import lombok.extern.log4j.Log4j2;
+
+import demoapp.utils.DemoStub;
 
 @XmlRootElement(name = "Demo")
 @XmlType
@@ -54,18 +57,18 @@ public class BlobDemo extends DemoStub {
 
         try {
             val bytes = _Bytes.of(_Resources.load(BlobDemo.class, "isis-logo-568x286.png"));
-            logo = new Blob("isis-logo-568x286.png", "image/png", bytes);
+            logo = Blob.of("isis-logo-568x286", CommonMimeType.PNG, bytes);
         } catch (Exception e) {
-            // TODO: handle exception
+            log.error("failed to create Blob from image resource", e);
         }
 
     }
 
     // -- EDITABLE
 
-    @Property(editing=Editing.ENABLED) //TODO should not be required, https://issues.apache.org/jira/browse/ISIS-1970
+    @Property
     @PropertyLayout
-    @XmlElement @XmlJavaTypeAdapter(DemoBlobStore.BlobAdapter.class)
+    @XmlElement @XmlJavaTypeAdapter(JaxbAdapters.BlobAdapter.class)
     @Getter @Setter private Blob logo;
 
     // -- READONLY

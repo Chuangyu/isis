@@ -22,18 +22,17 @@ import javax.inject.Inject;
 
 import org.apache.isis.applib.annotation.Action;
 import org.apache.isis.applib.annotation.ActionLayout;
-import org.apache.isis.applib.annotation.Mixin;
 import org.apache.isis.applib.annotation.Optionality;
 import org.apache.isis.applib.annotation.Parameter;
 import org.apache.isis.applib.annotation.ParameterLayout;
 import org.apache.isis.applib.annotation.PromptStyle;
-import org.apache.isis.applib.annotation.SemanticsOf;
 import org.apache.isis.applib.services.message.MessageService;
-import org.apache.isis.incubator.model.applib.annotation.Supporting;
+import org.apache.isis.incubator.model.applib.annotation.Model;
 
 import lombok.RequiredArgsConstructor;
 
-@Mixin
+@ActionLayout(named="Hide", promptStyle = PromptStyle.DIALOG_MODAL)
+@Action
 @RequiredArgsConstructor
 public class DependentArgsActionDemo_useHide {
 
@@ -41,9 +40,7 @@ public class DependentArgsActionDemo_useHide {
 
     private final DependentArgsActionDemo holder;
 
-    @ActionLayout(named="Hide", promptStyle = PromptStyle.DIALOG_MODAL)
-    @Action(semantics = SemanticsOf.SAFE)
-    public DependentArgsActionDemo $$(
+    public DependentArgsActionDemo act(
 
             // PARAM 0
             @ParameterLayout(named = "Hide Message Field")
@@ -62,8 +59,8 @@ public class DependentArgsActionDemo_useHide {
 
     // -- PARAM 1 (String message)
 
-    //@Supporting
-    public boolean hide1$$(boolean hideMessageField) {
+    @Model
+    public boolean hide1Act(boolean hideMessageField) {
         return hideMessageField;
     }
 

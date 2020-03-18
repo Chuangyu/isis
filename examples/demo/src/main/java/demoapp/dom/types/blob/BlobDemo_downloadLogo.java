@@ -21,22 +21,18 @@ package demoapp.dom.types.blob;
 import org.apache.isis.applib.annotation.Action;
 import org.apache.isis.applib.annotation.ActionLayout;
 import org.apache.isis.applib.annotation.ActionLayout.Position;
-import org.apache.isis.applib.annotation.Mixin;
 import org.apache.isis.applib.value.Blob;
 
 import lombok.RequiredArgsConstructor;
 
-@Mixin
+@Action(associateWith = "logo")
+@ActionLayout(position = Position.PANEL)
 @RequiredArgsConstructor
 public class BlobDemo_downloadLogo  {
 
     private final BlobDemo holder;
 
-    // -- EDITABLE
-
-    @Action(associateWith = "logo")
-    @ActionLayout(position = Position.PANEL)
-    public Blob $$() {
+    public Blob act() {
         return holder.getLogo();
     }
 

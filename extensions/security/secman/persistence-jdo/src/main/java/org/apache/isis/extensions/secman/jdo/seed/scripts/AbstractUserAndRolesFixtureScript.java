@@ -24,14 +24,15 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.isis.applib.value.Password;
-import org.apache.isis.commons.internal.collections._Lists;
-import org.apache.isis.commons.internal.exceptions._Exceptions;
-import org.apache.isis.extensions.fixtures.fixturescripts.FixtureScript;
+import org.apache.isis.core.commons.internal.collections._Lists;
+import org.apache.isis.core.commons.internal.exceptions._Exceptions;
 import org.apache.isis.extensions.secman.api.user.AccountType;
+import org.apache.isis.extensions.secman.api.user.ApplicationUserStatus;
 import org.apache.isis.extensions.secman.jdo.dom.role.ApplicationRole;
 import org.apache.isis.extensions.secman.jdo.dom.role.ApplicationRoleRepository;
 import org.apache.isis.extensions.secman.jdo.dom.user.ApplicationUser;
 import org.apache.isis.extensions.secman.jdo.dom.user.ApplicationUserRepository;
+import org.apache.isis.testing.fixtures.applib.fixturescripts.FixtureScript;
 
 import lombok.Getter;
 
@@ -81,34 +82,41 @@ public class AbstractUserAndRolesFixtureScript extends FixtureScript {
     protected void execute(final ExecutionContext executionContext) {
 
         // create user if does not exist, and assign to the role
-        applicationUser = applicationUserRepository.findByUsername(username);
+        applicationUser = applicationUserRepository.findByUsername(username)
+                .orElse(null);
         if(applicationUser == null) {
-            final boolean enabled = true;
+            
             switch (accountType) {
             case DELEGATED:
-                applicationUser = applicationUserRepository.newDelegateUser(username, null , enabled);
+                applicationUser = (ApplicationUser) applicationUserRepository
+                    .newDelegateUser(username, ApplicationUserStatus.ENABLED);
                 break;
             case LOCAL:
                 final Password pwd = new Password(password);
-                applicationUser = applicationUserRepository.newLocalUser(username, pwd, pwd, null, enabled, emailAddress);
+                applicationUser = (ApplicationUser) applicationUserRepository
+                        .newLocalUser(username, pwd, ApplicationUserStatus.ENABLED);
+                applicationUser.setEmailAddress(emailAddress);
             }
 
+            if(applicationUser == null) {
+                throw _Exceptions.unrecoverableFormatted("failed to create user '%s'", username);
+            }
+            
             // update tenancy (repository checks for null)
             applicationUser.setAtPath(tenancyPath);
-
+            
             for (final String roleName : roleNames) {
-                final ApplicationRole securityRole = applicationRoleRepository.findByName(roleName);
+                final ApplicationRole securityRole = applicationRoleRepository.findByName(roleName)
+                        .orElse(null);
 
                 if(securityRole!=null) {
-                    applicationUser.addRole(securityRole);    
+                    applicationRoleRepository.addRoleToUser(securityRole, applicationUser);
                 } else {
-
                     throw _Exceptions.unrecoverable("role not found by name: "+roleName);
-
                 }
 
-
             }
+            
         }
     }
 

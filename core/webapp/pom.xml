@@ -26,7 +26,7 @@
         <version>2.0.0-M3-SNAPSHOT</version>
     </parent>
 
-    <artifactId>isis-webapp</artifactId>
+    <artifactId>isis-core-webapp</artifactId>
     <name>Apache Isis Core - WebApp</name>
     <description>
         Bundles all the web specific classes a srequired by viewers.
@@ -34,8 +34,8 @@
     </description>
 
     <properties>
-        <jar-plugin.automaticModuleName>org.apache.isis.webapp</jar-plugin.automaticModuleName>
-        <git-plugin.propertiesDir>org/apache/isis/webapp</git-plugin.propertiesDir>
+        <jar-plugin.automaticModuleName>org.apache.isis.core.webapp</jar-plugin.automaticModuleName>
+        <git-plugin.propertiesDir>org/apache/isis/core/webapp</git-plugin.propertiesDir>
     </properties>
 
     <build>
@@ -61,7 +61,7 @@
 	
         <dependency>
             <groupId>org.apache.isis.core</groupId>
-            <artifactId>isis-runtime</artifactId>
+            <artifactId>isis-core-runtime</artifactId>
         </dependency>
         
         <dependency>
@@ -90,7 +90,7 @@
 
 		<dependency>
             <groupId>org.apache.isis.core</groupId>
-            <artifactId>isis-unittestsupport</artifactId>
+            <artifactId>isis-core-internaltestsupport</artifactId>
             <scope>test</scope>
             <exclusions>
             	<exclusion>
@@ -102,7 +102,7 @@
 
         <dependency>
             <groupId>org.apache.isis.core</groupId>
-            <artifactId>isis-runtime</artifactId>
+            <artifactId>isis-core-runtime</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

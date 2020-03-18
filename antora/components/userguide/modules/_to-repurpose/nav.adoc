@@ -1,4 +1,0 @@
-* Module Template
-
-** xref:about.adoc[About]
-

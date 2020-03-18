@@ -23,15 +23,18 @@ import javax.inject.Inject;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 
-import org.apache.isis.commons.internal.environment.IsisSystemEnvironment;
-import org.apache.isis.config.IsisConfiguration;
-import org.apache.isis.config.metamodel.specloader.IntrospectionMode;
-import org.apache.isis.config.presets.IsisPresets;
-import org.apache.isis.integtestsupport.validate.ValidateDomainModel;
-import org.apache.isis.metamodel.spec.DomainModelException;
-import org.apache.isis.metamodel.specloader.SpecificationLoader;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.apache.isis.core.commons.internal.environment.IsisSystemEnvironment;
+import org.apache.isis.core.config.IsisConfiguration;
+import org.apache.isis.core.config.metamodel.specloader.IntrospectionMode;
+import org.apache.isis.core.config.presets.IsisPresets;
+import org.apache.isis.core.metamodel.spec.DomainModelException;
+import org.apache.isis.core.metamodel.specloader.SpecificationLoader;
 import org.apache.isis.testdomain.Smoketest;
 import org.apache.isis.testdomain.conf.Configuration_headless;
 import org.apache.isis.testdomain.model.bad.AmbiguousTitle;
@@ -40,9 +43,7 @@ import org.apache.isis.testdomain.model.bad.InvalidOrphanedActionSupport;
 import org.apache.isis.testdomain.model.bad.InvalidOrphanedCollectionSupport;
 import org.apache.isis.testdomain.model.bad.InvalidOrphanedPropertySupport;
 import org.apache.isis.testdomain.model.bad.InvalidPropertyAnnotationOnAction;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.apache.isis.testing.integtestsupport.applib.validate.DomainModelValidator;
 
 import lombok.val;
 
@@ -53,7 +54,7 @@ import lombok.val;
                 Configuration_usingInvalidDomain.class
         }, 
         properties = {
-                "isis.reflector.introspector.mode=FULL"
+                "isis.core.meta-model.introspector.mode=FULL"
         })
 @TestPropertySource({
     //IsisPresets.DebugMetaModel,
@@ -61,6 +62,7 @@ import lombok.val;
     IsisPresets.SilenceMetaModel,
     IsisPresets.SilenceProgrammingModel
 })
+@DirtiesContext // because of the temporary installed 'bad' domain
 //@Incubating("does not work, when executed in sequence with other smoketests")
 class DomainModelTest_usingBadDomain {
     
@@ -78,10 +80,10 @@ class DomainModelTest_usingBadDomain {
     @Test
     void ambiguousTitle_shouldFail() {
            
-        val validateDomainModel = new ValidateDomainModel(specificationLoader);
+        val validator = new DomainModelValidator(specificationLoader, configuration, isisSystemEnvironment);
         
-        assertThrows(DomainModelException.class, validateDomainModel::run);
-        assertTrue(validateDomainModel.anyMatchesContaining(
+        assertThrows(DomainModelException.class, validator::throwIfInvalid);
+        assertTrue(validator.anyMatchesContaining(
                 AmbiguousTitle.class, 
                 "conflict for determining a strategy for retrieval of title"));
     }
@@ -89,9 +91,9 @@ class DomainModelTest_usingBadDomain {
     @Test
     void orphanedActionSupport_shouldFail() {
            
-        val validateDomainModel = new ValidateDomainModel(specificationLoader);
+        val validateDomainModel = new DomainModelValidator(specificationLoader, configuration, isisSystemEnvironment);
         
-        assertThrows(DomainModelException.class, validateDomainModel::run);
+        assertThrows(DomainModelException.class, validateDomainModel::throwIfInvalid);
         assertTrue(validateDomainModel.anyMatchesContaining(
                 InvalidOrphanedActionSupport.class, 
                 "is assumed to support"));
@@ -100,7 +102,7 @@ class DomainModelTest_usingBadDomain {
 //    @Test
 //    void orphanedActionSupportNotEnforced_shouldFail() {
 //           
-//        val validateDomainModel = new ValidateDomainModel();
+//        val validateDomainModel = new DomainModelValidator();
 //        
 //        assertThrows(DomainModelException.class, validateDomainModel::run);
 //        assertTrue(validateDomainModel.anyMatchesContaining(
@@ -111,9 +113,9 @@ class DomainModelTest_usingBadDomain {
     @Test
     void orphanedPropertySupport_shouldFail() {
            
-        val validateDomainModel = new ValidateDomainModel(specificationLoader);
+        val validateDomainModel = new DomainModelValidator(specificationLoader, configuration, isisSystemEnvironment);
         
-        assertThrows(DomainModelException.class, validateDomainModel::run);
+        assertThrows(DomainModelException.class, validateDomainModel::throwIfInvalid);
         assertTrue(validateDomainModel.anyMatchesContaining(
                 InvalidOrphanedPropertySupport.class, 
                 "is assumed to support"));
@@ -122,9 +124,9 @@ class DomainModelTest_usingBadDomain {
     @Test
     void orphanedCollectionSupport_shouldFail() {
            
-        val validateDomainModel = new ValidateDomainModel(specificationLoader);
+        val validateDomainModel = new DomainModelValidator(specificationLoader, configuration, isisSystemEnvironment);
         
-        assertThrows(DomainModelException.class, validateDomainModel::run);
+        assertThrows(DomainModelException.class, validateDomainModel::throwIfInvalid);
         assertTrue(validateDomainModel.anyMatchesContaining(
                 InvalidOrphanedCollectionSupport.class, 
                 "is assumed to support"));
@@ -133,9 +135,9 @@ class DomainModelTest_usingBadDomain {
     @Test @Disabled("this case has no vaildation refiner yet")
     void invalidPropertyAnnotationOnAction_shouldFail() {
         
-        val validateDomainModel = new ValidateDomainModel(specificationLoader);
+        val validateDomainModel = new DomainModelValidator(specificationLoader, configuration, isisSystemEnvironment);
         
-        assertThrows(DomainModelException.class, validateDomainModel::run);
+        assertThrows(DomainModelException.class, validateDomainModel::throwIfInvalid);
         assertTrue(validateDomainModel.anyMatchesContaining(
                 InvalidPropertyAnnotationOnAction.class, 
                 "TODO"));

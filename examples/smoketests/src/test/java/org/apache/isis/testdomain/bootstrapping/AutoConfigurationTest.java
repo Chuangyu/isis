@@ -29,12 +29,15 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.TestPropertySource;
 
-import org.apache.isis.commons.internal.environment.IsisSystemEnvironment;
-import org.apache.isis.config.beans.IsisBeanFactoryPostProcessorForSpring;
-import org.apache.isis.config.beans.IsisBeanTypeRegistryHolder;
-import org.apache.isis.config.presets.IsisPresets;
-import org.apache.isis.metamodel.context.MetaModelContexts;
-//import org.apache.isis.testdomain.Incubating;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.apache.isis.core.commons.internal.environment.IsisSystemEnvironment;
+import org.apache.isis.core.config.beans.IsisBeanFactoryPostProcessorForSpring;
+import org.apache.isis.core.config.beans.IsisBeanTypeRegistryHolder;
+import org.apache.isis.core.config.presets.IsisPresets;
+import org.apache.isis.core.metamodel.context.MetaModelContexts;
 import org.apache.isis.testdomain.Smoketest;
 import org.apache.isis.testdomain.conf.Configuration_usingStereotypes;
 import org.apache.isis.testdomain.model.stereotypes.MyObject;
@@ -42,11 +45,9 @@ import org.apache.isis.testdomain.model.stereotypes.MyObject_mixin;
 import org.apache.isis.testdomain.model.stereotypes.MyService;
 import org.apache.isis.testdomain.model.stereotypes.MyView;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import lombok.val;
+
+//import org.apache.isis.testdomain.Incubating;
 
 @Smoketest
 @SpringBootTest(
@@ -57,16 +58,14 @@ import lombok.val;
                 Configuration_usingStereotypes.class
         },
         properties = {
-                "logging.config=log4j2-test.xml",
-                // "isis.reflector.introspector.parallelize=false",
-                // "logging.level.org.apache.isis.metamodel.specloader.specimpl.ObjectSpecificationAbstract=TRACE"
+                // "isis.core.meta-model.introspector.parallelize=false",
+                // "logging.level.ObjectSpecificationAbstract=TRACE"
         })
 @TestPropertySource({
-    //IsisPresets.DebugDiscovery
     IsisPresets.SilenceMetaModel,
-    IsisPresets.SilenceProgrammingModel
+    IsisPresets.SilenceProgrammingModel,
+    IsisPresets.UseLog4j2Test,
 })
-//@Incubating("under construction, not tested with surefire yet")
 class AutoConfigurationTest {
     
     @Inject private ApplicationContext applicationContext;

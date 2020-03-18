@@ -25,15 +25,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.junit.Assert.assertNotNull;
+
 import org.apache.isis.applib.services.repository.RepositoryService;
-import org.apache.isis.extensions.fixtures.fixturescripts.FixtureScripts;
 import org.apache.isis.testdomain.Smoketest;
 import org.apache.isis.testdomain.conf.Configuration_usingJdo;
 import org.apache.isis.testdomain.jdo.JdoTestDomainPersona;
-import org.apache.isis.testdomain.jdo.Product;
-import org.apache.isis.testdomain.jdo.ProductComment;
-
-import static org.junit.Assert.assertNotNull;
+import org.apache.isis.testdomain.jdo.entities.JdoProduct;
+import org.apache.isis.testdomain.jdo.entities.JdoProductComment;
+import org.apache.isis.testing.fixtures.applib.fixturescripts.FixtureScripts;
 
 import lombok.val;
 
@@ -65,10 +65,10 @@ class TimestampingTest {
     @Test
     void updatedByAt_shouldBeFilledInByTheTimestampingService() {
         
-        val product = repository.allInstances(Product.class).listIterator().next();
+        val product = repository.allInstances(JdoProduct.class).listIterator().next();
         assertNotNull(product);
 
-        val comment = new ProductComment();
+        val comment = new JdoProductComment();
         comment.setProduct(product);
         comment.setComment("Awesome Book!");
 

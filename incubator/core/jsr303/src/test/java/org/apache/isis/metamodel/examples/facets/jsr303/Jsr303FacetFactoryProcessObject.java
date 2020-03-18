@@ -18,9 +18,7 @@
  */
 
 
-package org.apache.isis.metamodel.examples.facets.jsr303;
-
-import static org.junit.Assert.fail;
+package org.apache.isis.core.metamodel.examples.facets.jsr303;
 
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
@@ -31,9 +29,12 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.apache.isis.metamodel.examples.facets.jsr303.Jsr303FacetFactory;
-import org.apache.isis.metamodel.facets.FacetHolder;
-import org.apache.isis.metamodel.facets.MethodRemover;
+
+import static org.junit.Assert.fail;
+
+import org.apache.isis.core.metamodel.examples.facets.jsr303.Jsr303FacetFactory;
+import org.apache.isis.core.metamodel.facets.FacetHolder;
+import org.apache.isis.core.metamodel.facets.MethodRemover;
 
 
 @RunWith(JMock.class)

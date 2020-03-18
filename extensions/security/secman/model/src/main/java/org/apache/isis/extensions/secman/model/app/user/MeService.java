@@ -45,11 +45,13 @@ import org.apache.isis.extensions.secman.api.user.ApplicationUserRepository;
 public class MeService {
 
     public static abstract class PropertyDomainEvent<T> extends IsisModuleExtSecmanApi.PropertyDomainEvent<MeService, T> {}
-
     public static abstract class CollectionDomainEvent<T> extends IsisModuleExtSecmanApi.CollectionDomainEvent<MeService, T> {}
-
     public static abstract class ActionDomainEvent extends IsisModuleExtSecmanApi.ActionDomainEvent<MeService> {}
 
+    @Inject private ApplicationUserRepository<? extends ApplicationUser> applicationUserRepository;
+    @Inject private UserService userService;
+    @Inject private javax.inject.Provider<QueryResultsCache> queryResultsCacheProvider;
+    
     // -- iconName
     public String iconName() {
         return "applicationUser";
@@ -68,7 +70,7 @@ public class MeService {
             )
     @MemberOrder(name = "Security", sequence = "100")
     public ApplicationUser me() {
-        return queryResultsCache.execute(new Callable<ApplicationUser>() {
+        return queryResultsCacheProvider.get().execute(new Callable<ApplicationUser>() {
             @Override
             public ApplicationUser call() throws Exception {
                 return doMe();
@@ -85,10 +87,7 @@ public class MeService {
         return applicationUserRepository.findOrCreateUserByUsername(myName);
     }
 
-    // -- DEPENDENCIES
-    @Inject ApplicationUserRepository applicationUserRepository;
-    @Inject UserService userService;
-    @Inject QueryResultsCache queryResultsCache;
+
 
 
 }

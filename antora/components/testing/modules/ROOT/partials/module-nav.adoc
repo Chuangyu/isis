@@ -1,2 +1,0 @@
-* xref:testing:ROOT:overview.adoc[Overview]
-

@@ -22,18 +22,17 @@ import javax.inject.Inject;
 
 import org.apache.isis.applib.annotation.Action;
 import org.apache.isis.applib.annotation.ActionLayout;
-import org.apache.isis.applib.annotation.Mixin;
 import org.apache.isis.applib.annotation.Optionality;
 import org.apache.isis.applib.annotation.Parameter;
 import org.apache.isis.applib.annotation.ParameterLayout;
 import org.apache.isis.applib.annotation.PromptStyle;
-import org.apache.isis.applib.annotation.SemanticsOf;
 import org.apache.isis.applib.services.message.MessageService;
-import org.apache.isis.incubator.model.applib.annotation.Supporting;
+import org.apache.isis.incubator.model.applib.annotation.Model;
 
 import lombok.RequiredArgsConstructor;
 
-@Mixin
+@ActionLayout(named="Default", promptStyle = PromptStyle.DIALOG_MODAL)
+@Action
 @RequiredArgsConstructor
 public class DependentArgsActionDemo_useDefault {
 
@@ -42,9 +41,7 @@ public class DependentArgsActionDemo_useDefault {
 
     private final DependentArgsActionDemo holder;
 
-    @ActionLayout(named="Default", promptStyle = PromptStyle.DIALOG_MODAL)
-    @Action(semantics = SemanticsOf.SAFE)
-    public DependentArgsActionDemo $$(
+    public DependentArgsActionDemo act(
 
             // PARAM 0
             @Parameter(optionality = Optionality.MANDATORY)
@@ -63,8 +60,8 @@ public class DependentArgsActionDemo_useDefault {
 
     // -- PARAM 1 (String message)
 
-    //@Supporting
-    public String default1$$(Parity parity) {
+    @Model
+    public String default1Act(Parity parity) {
         if(parity == null) {
             return "no parity selected";
         }

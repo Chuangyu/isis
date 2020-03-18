@@ -1,4 +1,0 @@
-= Metamodel
-include::_attributes.adoc[]
-
-

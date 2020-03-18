@@ -36,7 +36,6 @@
     </description>
 
 	<properties>
-		<revision>2.0.0-M3-SNAPSHOT</revision>
 
 		<isis.skipTests>false</isis.skipTests>
 		<maven.test.skip>${isis.skipTests}</maven.test.skip>
@@ -86,11 +85,13 @@
 
 		<camel.version>2.24.2</camel.version>
 
-		<commons-email.version>1.4</commons-email.version>
+		<commons-email.version>1.5</commons-email.version>
 		<commons-httpclient.version>3.1</commons-httpclient.version>
 		<commons-io.version>2.6</commons-io.version>
 		<commons-lang3.version>3.9</commons-lang3.version>
 		<commons-logging.version>1.2</commons-logging.version>
+
+		<cucumber.version>5.1.2</cucumber.version>
 
 		<cxf-rt-rs-client.version>3.3.4</cxf-rt-rs-client.version>
 
@@ -137,14 +138,16 @@
 		<jquery-ui.version>1.12.1</jquery-ui.version>
 
 		<jsr305.version>3.0.2</jsr305.version>
-
-		<junit.jupiter.version>5.5.2</junit.jupiter.version>
-		<junit-legacy.version>4.12</junit-legacy.version>
+		<junit-platform.version>1.6.0</junit-platform.version>
 
 		<log4jdbc-remix.version>0.2.7</log4jdbc-remix.version>
 
 		<maven-eclipse-plugin.version>2.10</maven-eclipse-plugin.version>
-		<maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+		<maven-release-plugin.version>2.5.3</maven-release-plugin.version>		<!-- See https://nodejs.org/en/download/ for latest node and npm (lts) versions -->
+		
+		<!-- See https://nodejs.org/en/download/ for latest node and npm (lts) versions -->
+		<node.version>v12.14.0</node.version>
+		<npm.version>6.13.1</npm.version>
 
 		<objenesis.version>2.2</objenesis.version>
 		<ognl.version>3.0.9</ognl.version>
@@ -155,29 +158,33 @@
 
 		<quartz-scheduler.version>2.2.1</quartz-scheduler.version>
 
-		<resteasy4-jaxrs.version>4.0.0.Beta5</resteasy4-jaxrs.version> <!-- Isis Resteasy Plugin 4 (for JEE 8 JAX-RS API 2.1) -->
+		<resteasy4-spring-boot-starter.version>4.4.0.Final</resteasy4-spring-boot-starter.version>
+
 		<reflections.version>0.9.11</reflections.version>
 
 		<select2.version>4.0.10</select2.version>
 		<shiro.version>1.4.1</shiro.version>
+		<cors-filter.version>1.0.1</cors-filter.version>
 		<simpleslackapi.version>1.2.0</simpleslackapi.version>
 		<slf4j-api.version>1.7.26</slf4j-api.version> <!-- as provided by spring-boot, needed to solve convergence issues -->
-		<spring-framework.version>5.2.1.RELEASE</spring-framework.version>
-		<spring-boot.version>2.2.1.RELEASE</spring-boot.version> <!--  has no effect here, needs to be set in core-parent/pom.xml -->
+		<spring-framework.version>5.2.4.RELEASE</spring-framework.version>
+		<spring-boot.version>2.2.4.RELEASE</spring-boot.version> <!--  has no effect here, needs to be set in core-parent/pom.xml -->
 		<summernote.version>0.8.11</summernote.version>
 		<swagger-core.version>1.6.0</swagger-core.version>
 
 		<togglz.version>2.1.0.Final</togglz.version>
 
-		<wicket.version>8.6.1</wicket.version>
+		<vaadin.version>14.1.20</vaadin.version>
+
+		<wicket.version>8.7.0</wicket.version>
 		<wicket-bootstrap.version>2.0.11</wicket-bootstrap.version> <!-- de.agilecoders.wicket:wicket-bootstrap-core -->
 		<wicket-bootstrap-core.version>2.0.11</wicket-bootstrap-core.version>
 		<wicket-bootstrap-datetimepicker.version>4.17.37-1</wicket-bootstrap-datetimepicker.version>
-		<wicket-fullcalendar.version>2.2.0</wicket-fullcalendar.version>
+		<wicket-fullcalendar.version>4.2</wicket-fullcalendar.version>
 		<wicket-source.version>7.0.0</wicket-source.version>
 		<wicket-webjars.version>2.0.15</wicket-webjars.version>
 
-		<wicketstuff.version>8.6.0</wicketstuff.version> <!-- org.wicketstuff:wicketstuff-select2 -->
+		<wicketstuff.version>8.7.0</wicketstuff.version> <!-- org.wicketstuff:wicketstuff-select2 -->
 		<wicketstuff-gmap3.version>${wicket.version}</wicketstuff-gmap3.version>
 
 		<xdocreport.version>1.0.6</xdocreport.version>
@@ -187,7 +194,7 @@
 	<pluginRepositories>
 		<pluginRepository>
 			<id>DataNucleus_2</id>
-			<url>http://www.datanucleus.org/downloads/maven2/</url>
+			<url>http://www.datanucleus.org/downloads/maven2/</url> <!--TODO not yet supports SSL, even required? -->
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
@@ -237,7 +244,7 @@
 		<!-- required for RestEasy -->
 		<repository>
 			<id>jboss</id>
-			<url>http://repository.jboss.org/nexus/content/groups/public-jboss/</url>
+			<url>https://repository.jboss.org/nexus/content/groups/public-jboss/</url>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
@@ -319,7 +326,7 @@
 							<exclude>${testsToExclude}</exclude>
 						</excludes>
 						<printSummary>false</printSummary>
-						<argLine>${surefire-plugin.argLine}</argLine>
+						<argLine>@{argLine} ${surefire-plugin.argLine}</argLine>
 					</configuration>
 					<!-- goal:test binds to phase:test -->
 				</plugin>
@@ -622,7 +629,7 @@
 								<resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
 							</resourceBundles>
 							<properties>
-								<projectTimespan>2010~2019</projectTimespan>
+								<projectTimespan>2010~2020</projectTimespan>
 								<postDepListText>
 									The above (auto-generated) list aggregates the
 									dependencies
@@ -687,17 +694,17 @@
 			<!-- for benefit of application developers, using scope=import, type=pom -->
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-commons</artifactId>
+				<artifactId>isis-core-commons</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-unittestsupport</artifactId>
+				<artifactId>isis-core-internaltestsupport</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-unittestsupport</artifactId>
+				<artifactId>isis-core-internaltestsupport</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<type>test-jar</type>
 				<scope>test</scope>
@@ -718,14 +725,14 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-config</artifactId>
+				<artifactId>isis-core-config</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<type>jar</type>
 				<scope>compile</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-config</artifactId>
+				<artifactId>isis-core-config</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<type>test-jar</type>
 				<scope>test</scope>
@@ -746,102 +753,85 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-metamodel</artifactId>
+				<artifactId>isis-core-metamodel</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<type>jar</type>
 				<scope>compile</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-metamodel</artifactId>
+				<artifactId>isis-core-metamodel</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<type>test-jar</type>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-runtime</artifactId>
+				<artifactId>isis-core-runtime</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-runtime</artifactId>
-				<version>2.0.0-M3-SNAPSHOT</version>
-				<type>test-jar</type>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-webboot-springboot</artifactId>
-				<version>2.0.0-M3-SNAPSHOT</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-webboot-springboot</artifactId>
+				<artifactId>isis-core-runtime</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<type>test-jar</type>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-runtime-services</artifactId>
+				<artifactId>isis-core-runtimeservices</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-runtime-services</artifactId>
-				<version>2.0.0-M3-SNAPSHOT</version>
-				<type>test-jar</type>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-webapp</artifactId>
-				<version>2.0.0-M3-SNAPSHOT</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-webapp</artifactId>
+				<artifactId>isis-core-runtimeservices</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<type>test-jar</type>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-integtestsupport</artifactId>
+				<artifactId>isis-core-webapp</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
+				<artifactId>isis-core-webapp</artifactId>
+				<version>2.0.0-M3-SNAPSHOT</version>
+				<type>test-jar</type>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-restfulobjects-applib</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-restfulobjects-applib</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<type>test-jar</type>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-restfulobjects-rendering</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-restfulobjects-rendering</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<type>test-jar</type>
 				<scope>test</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-restfulobjects-viewer</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-restfulobjects-viewer</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<type>test-jar</type>
@@ -849,75 +839,75 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-security-api</artifactId>
+				<artifactId>isis-core-security</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.security</groupId>
 				<artifactId>isis-security-bypass</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.security</groupId>
 				<artifactId>isis-security-shiro</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.security</groupId>
 				<artifactId>isis-security-keycloak</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
-				<artifactId>isis-codegen-bytebuddy</artifactId>
+				<artifactId>isis-core-codegen-bytebuddy</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.persistence</groupId>
 				<artifactId>isis-persistence-jdo-applib</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.persistence</groupId>
 				<artifactId>isis-persistence-jdo-datanucleus5</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-restfulobjects-jaxrsresteasy4</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-wicket-model</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-wicket-model</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<scope>test</scope>
 				<type>test-jar</type>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-wicket-ui</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-wicket-ui</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<scope>test</scope>
 				<type>test-jar</type>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-wicket-viewer</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 			</dependency>
 			<dependency>
-				<groupId>org.apache.isis.core</groupId>
+				<groupId>org.apache.isis.viewer</groupId>
 				<artifactId>isis-viewer-wicket-viewer</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<scope>test</scope>
@@ -925,7 +915,19 @@
 			</dependency>
 			<dependency>
 				<groupId>org.apache.isis.mavendeps</groupId>
-				<artifactId>isis-mavendeps-testing</artifactId>
+				<artifactId>isis-mavendeps-unittests</artifactId>
+				<version>2.0.0-M3-SNAPSHOT</version>
+				<type>pom</type>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.isis.mavendeps</groupId>
+				<artifactId>isis-mavendeps-integtests</artifactId>
+				<version>2.0.0-M3-SNAPSHOT</version>
+				<type>pom</type>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.isis.mavendeps</groupId>
+				<artifactId>isis-mavendeps-integspecs</artifactId>
 				<version>2.0.0-M3-SNAPSHOT</version>
 				<type>pom</type>
 			</dependency>
@@ -945,6 +947,11 @@
 
 			<!-- THIRD PARTY DEPENDENCIES -->
 
+			<dependency>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate-validator</artifactId>
+				<version>${hibernate-validator.version}</version>
+			</dependency>
 
 			<dependency>
 				<groupId>com.approvaltests</groupId>
@@ -1074,6 +1081,16 @@
 				<artifactId>fr.opensagres.xdocreport.converter.docx.xwpf</artifactId>
 				<version>${xdocreport.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>fr.opensagres.xdocreport</groupId>
+				<artifactId>org.apache.poi.xwpf.converter.pdf</artifactId>
+				<version>${xdocreport.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>fr.opensagres.xdocreport</groupId>
+				<artifactId>org.apache.poi.xwpf.converter.core</artifactId>
+				<version>${xdocreport.version}</version>
+			</dependency>
 
 			<dependency>
 				<groupId>io.swagger</groupId>
@@ -1116,7 +1133,6 @@
 				<artifactId>wicket-fullcalendar-core</artifactId>
 				<version>${wicket-fullcalendar.version}</version>
 			</dependency>
-
 			<dependency>
 				<groupId>net.ftlines.wicket-source</groupId>
 				<!-- <groupId>com.github.jennybrown8.wicket-source</groupId> -->
@@ -1253,6 +1269,20 @@
 				<artifactId>shiro-web</artifactId>
 				<version>${shiro.version}</version>
 			</dependency>
+
+			<dependency>
+				<groupId>org.ebaysf.web</groupId>
+				<artifactId>cors-filter</artifactId>
+				<version>${cors-filter.version}</version>
+			</dependency>
+			
+			<dependency>
+	            <groupId>com.vaadin</groupId>
+	            <artifactId>vaadin-bom</artifactId>
+	            <version>${vaadin.version}</version>
+	            <type>pom</type>
+	            <scope>import</scope>
+	        </dependency>
 
 			<dependency>
 				<groupId>org.apache.wicket</groupId>
@@ -1407,22 +1437,11 @@
 				<version>${jdom.version}</version>
 			</dependency>
 
-			<dependency>
-				<groupId>org.jboss.resteasy</groupId>
-				<artifactId>resteasy-jackson-provider</artifactId>
-				<version>${resteasy4-jaxrs.version}</version>
-			</dependency>
 
 			<dependency>
 				<groupId>org.jboss.resteasy</groupId>
-				<artifactId>resteasy-jaxrs</artifactId>
-				<version>${resteasy4-jaxrs.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.jboss.resteasy</groupId>
-				<artifactId>resteasy-jaxb-provider</artifactId>
-				<version>${resteasy4-jaxrs.version}</version>
+				<artifactId>resteasy-spring-boot-starter</artifactId>
+				<version>${resteasy4-spring-boot-starter.version}</version>
 			</dependency>
 
 			<dependency>
@@ -1549,8 +1568,47 @@
 				<version>${wicketstuff.version}</version>
 			</dependency>
 
+			<dependency>
+				<groupId>io.cucumber</groupId>
+				<artifactId>cucumber-java</artifactId>
+				<version>${cucumber.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.cucumber</groupId>
+				<artifactId>cucumber-spring</artifactId>
+				<version>${cucumber.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.cucumber</groupId>
+				<artifactId>cucumber-junit</artifactId>
+				<version>${cucumber.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.cucumber</groupId>
+				<artifactId>cucumber-junit-platform-engine</artifactId>
+				<version>${cucumber.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-api</artifactId>
+				<version>${junit-jupiter.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.platform</groupId>
+				<artifactId>junit-platform-console</artifactId>
+				<version>${junit-platform.version}</version>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
 
 	<profiles>
 		<profile>
@@ -1830,41 +1888,28 @@
 	
 		<module>../supplemental-model</module>
 
-		<module>schema</module>
+		<module>../api/schema</module>
+		<module>../api/applib</module>
+
 		<module>codegen-bytebuddy</module>
 		<module>commons</module>
 		<module>config</module>
-		<module>applib</module>
+		<module>internaltestsupport</module>
 		<module>metamodel</module>
 		<module>runtime</module>
-		<module>runtime-services</module>
+		<module>runtimeservices</module>
 		<module>webapp</module>
-		<module>webboot-springboot</module>
 
-		<module>testsupport/unittestsupport</module>
-		<module>testsupport/integtestsupport</module>
 
-		<module>security/api</module>
-		<module>security/bypass</module>
-		<module>security/shiro</module>
-		<module>security/keycloak</module>
+		<module>security</module>
+		<module>../security/bypass</module>
+		<module>../security/shiro</module>
+		<module>../security/keycloak</module>
 
-		<module>viewers/restfulobjects/applib</module>
-		<module>viewers/restfulobjects/rendering</module>
-		<module>viewers/restfulobjects/jaxrs-resteasy-4</module>
-		<module>viewers/restfulobjects/viewer</module>
+		<module>../viewers/restfulobjects</module>
+		<module>../viewers/wicket</module>
 
-		<module>viewers/wicket/model</module>
-		<module>viewers/wicket/ui</module>
-		<module>viewers/wicket/viewer</module>
-
-		<module>persistence/jdo/applib</module>
-		<module>persistence/jdo/datanucleus-5</module>
-		
-
-		<!-- to break cyclic dependencies some tests needed to be moved to their 
-			own modules -->
-		<module>detached-tests</module>
+		<module>../persistence/jdo</module>
 	</modules>
 
 </project>

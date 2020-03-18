@@ -18,12 +18,41 @@
  */
 package org.apache.isis.extensions.secman.api.role;
 
+import org.apache.isis.extensions.secman.api.IsisModuleExtSecmanApi;
+
 public interface ApplicationRole {
 
     public static final int MAX_LENGTH_NAME = 50;
     public static final int TYPICAL_LENGTH_NAME = 30;
     public static final int TYPICAL_LENGTH_DESCRIPTION = 50;
 
+    // -- EVENTS
+    
+    public static abstract class PropertyDomainEvent<T> extends IsisModuleExtSecmanApi.PropertyDomainEvent<ApplicationRole, T> {}
+    public static abstract class CollectionDomainEvent<T> extends IsisModuleExtSecmanApi.CollectionDomainEvent<ApplicationRole, T> {}
+    public static abstract class ActionDomainEvent extends IsisModuleExtSecmanApi.ActionDomainEvent<ApplicationRole> {}
+    
+    public static class AddUserDomainEvent extends ActionDomainEvent {}
+    public static class RemoveUserDomainEvent extends ActionDomainEvent {}
+    public static class AddActionDomainEvent extends ActionDomainEvent {}
+    public static class AddClassDomainEvent extends ActionDomainEvent {}
+    public static class AddCollectionDomainEvent extends ActionDomainEvent {}
+    public static class AddPackageDomainEvent extends ActionDomainEvent {}
+    public static class AddPropertyDomainEvent extends ActionDomainEvent {}
+    public static class RemovePermissionDomainEvent extends ActionDomainEvent {}
+    
+    public static class DeleteDomainEvent extends ActionDomainEvent {}
+    
+    public static class UpdateDescriptionDomainEvent extends ActionDomainEvent {}
+    public static class UpdateNameDomainEvent extends ActionDomainEvent {}
+    
+    // -- MODEL
+    
     String getName();
+    void setName(String name);
+    
+    String getDescription();
+    void setDescription(String description);
+
 
 }

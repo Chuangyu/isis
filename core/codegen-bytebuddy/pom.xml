@@ -20,7 +20,7 @@
 		<version>2.0.0-M3-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>isis-codegen-bytebuddy</artifactId>
+	<artifactId>isis-core-codegen-bytebuddy</artifactId>
 
 	<name>Apache Isis Core - Code Gen (ByteBuddy)</name>
 	<description>
@@ -30,8 +30,8 @@
 	<properties>
 		<objenesis.version>2.6</objenesis.version>
 
-		<jar-plugin.automaticModuleName>org.apache.isis.codegen.bytebuddy</jar-plugin.automaticModuleName>
-		<git-plugin.propertiesDir>org/apache/isis/codegen/bytebuddy</git-plugin.propertiesDir>
+		<jar-plugin.automaticModuleName>org.apache.isis.core.codegen.bytebuddy</jar-plugin.automaticModuleName>
+		<git-plugin.propertiesDir>org/apache/isis/core/codegen/bytebuddy</git-plugin.propertiesDir>
 	</properties>
 
 	<build>
@@ -69,7 +69,7 @@
 	
 		<dependency>
 			<groupId>org.apache.isis.core</groupId>
-			<artifactId>isis-commons</artifactId>
+			<artifactId>isis-core-commons</artifactId>
 			<scope>compile</scope>
 		</dependency>
 

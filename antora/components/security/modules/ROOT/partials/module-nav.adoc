@@ -1,4 +1,0 @@
-* xref:security:ROOT:domain-services-api-for-applications.adoc[Domain Services (API for Applications)]
-
-
-

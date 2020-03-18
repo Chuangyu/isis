@@ -55,20 +55,21 @@
 				</excludes>
 			</resource>
 		</resources>
+
 	</build>
 
 	<dependencies>
 
 		<!-- WEB APPLICATION DEPENDENCY BUNDLE -->
-		
+
 		<dependency>
 			<groupId>org.apache.isis.mavendeps</groupId>
 			<artifactId>isis-mavendeps-webapp</artifactId>
 			<type>pom</type>
 		</dependency>
-		
+
 		<!-- JDK11+ SUPPORT -->
-		
+
 		<dependency>
 			<groupId>org.apache.isis.mavendeps</groupId>
 			<artifactId>isis-mavendeps-jdk11</artifactId>
@@ -78,20 +79,24 @@
 		<!-- EXTENSIONS -->
 
 		<dependency>
-			<groupId>org.apache.isis.extensions</groupId>
-			<artifactId>isis-extensions-asciidoc</artifactId>
+			<groupId>org.apache.isis.valuetypes</groupId>
+			<artifactId>isis-valuetypes-asciidoc-ui</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.isis.incubator</groupId>
 			<artifactId>isis-incubator-model</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.isis.extensions</groupId>
-			<artifactId>isis-extensions-sse</artifactId>
+			<groupId>org.apache.isis.valuetypes</groupId>
+			<artifactId>isis-valuetypes-sse-ui</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.isis.extensions</groupId>
-			<artifactId>isis-extensions-exceldownload</artifactId>
+			<artifactId>isis-extensions-cors-impl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.isis.extensions</groupId>
+			<artifactId>isis-extensions-exceldownload-ui</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.isis.extensions</groupId>
@@ -109,13 +114,17 @@
 			<groupId>org.apache.isis.extensions</groupId>
 			<artifactId>isis-extensions-secman-shiro-realm</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>org.apache.isis.testing</groupId>
+			<artifactId>isis-testing-h2console-ui</artifactId>
+		</dependency>
+		
 		<!-- OTHER DEPENDENCIES -->
 
-		<dependency>
-			<groupId>org.hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.hsqldb</groupId> -->
+<!-- 			<artifactId>hsqldb</artifactId> -->
+<!-- 		</dependency> -->
 
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -196,10 +205,10 @@
 								</ports>
 							</container>
 							<to>
-								<image>docker.io/apacheisis/isis-2-demo:springboot</image>
-<!-- 								<tags> -->
-<!-- 									<tag>latest</tag> -->
-<!-- 								</tags> -->
+								<image>docker.io/apacheisis/demo-springboot</image>
+								<tags>
+									<tag>nightly</tag>
+								</tags>
 								<auth>
 									<username>${env.DOCKER_REGISTRY_USERNAME}</username>
 									<password>${env.DOCKER_REGISTRY_PASSWORD}</password>
@@ -246,7 +255,7 @@
 								</ports>
 							</container>
 							<to>
-								<image>docker.io/apacheisis/isis-2-demo:dryrun</image>
+								<image>docker.io/apacheisis/demo-dryrun</image>
 								<auth>
 									<username>${env.DOCKER_REGISTRY_USERNAME}</username>
 									<password>${env.DOCKER_REGISTRY_PASSWORD}</password>
@@ -287,7 +296,7 @@
 								<appRoot>/usr/local/tomcat/webapps/demo</appRoot>
 							</container>
 							<to>
-								<image>docker.io/apacheisis/isis-2-demo:tomcat</image>
+								<image>docker.io/apacheisis/demo-tomcat</image>
 								<auth>
 									<username>${env.DOCKER_REGISTRY_USERNAME}</username>
 									<password>${env.DOCKER_REGISTRY_PASSWORD}</password>

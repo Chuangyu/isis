@@ -25,27 +25,28 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
-
-import org.apache.isis.testdomain.conf.Configuration_usingJdo;
-import org.apache.isis.testdomain.jdo.Book;
-import org.apache.isis.viewer.restfulobjects.viewer.IsisModuleRestfulObjectsViewer;
+import org.springframework.test.context.TestPropertySource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import org.apache.isis.core.config.presets.IsisPresets;
+import org.apache.isis.testdomain.conf.Configuration_usingJdo;
+import org.apache.isis.testdomain.jdo.entities.JdoBook;
+import org.apache.isis.testdomain.util.rest.RestEndpointService;
+import org.apache.isis.viewer.restfulobjects.jaxrsresteasy4.IsisModuleViewerRestfulObjectsJaxrsResteasy4;
+
 import lombok.val;
 
 @SpringBootTest(
         classes = {RestEndpointService.class},
-        properties = {
-                "logging.config=log4j2-test.xml",
-        },
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@TestPropertySource(IsisPresets.UseLog4j2Test)
 @Import({
     Configuration_usingJdo.class,
-    IsisModuleRestfulObjectsViewer.class
+    IsisModuleViewerRestfulObjectsJaxrsResteasy4.class
 })
 class RestServiceTest {
 
@@ -58,7 +59,7 @@ class RestServiceTest {
         assertNotNull(restService.getPort());
         assertTrue(restService.getPort()>0);
 
-        val useRequestDebugLogging = true;
+        val useRequestDebugLogging = false;
         val restfulClient = restService.newClient(useRequestDebugLogging);
 
         val digest = restService.getRecommendedBookOfTheWeek(restfulClient);
@@ -67,7 +68,7 @@ class RestServiceTest {
             fail(digest.getFailureCause());
         }
 
-        val bookOfTheWeek = digest.get();
+        val bookOfTheWeek = digest.getEntities().getSingletonOrFail();
 
         assertNotNull(bookOfTheWeek);
         assertEquals("Book of the week", bookOfTheWeek.getName());
@@ -80,10 +81,10 @@ class RestServiceTest {
         assertNotNull(restService.getPort());
         assertTrue(restService.getPort()>0);
 
-        val useRequestDebugLogging = true;
+        val useRequestDebugLogging = false;
         val restfulClient = restService.newClient(useRequestDebugLogging);
 
-        val newBook = Book.of("REST Book", "A sample REST book for testing.", 77., 
+        val newBook = JdoBook.of("REST Book", "A sample REST book for testing.", 77., 
                 "REST Author", "REST ISBN", "REST Publisher");
         
         val digest = restService.storeBook(restfulClient, newBook);
@@ -92,13 +93,84 @@ class RestServiceTest {
             fail(digest.getFailureCause());
         }
 
-        val storedBook = digest.get();
+        val storedBook = digest.getEntities().getSingletonOrFail();
 
         assertNotNull(storedBook);
         assertEquals("REST Book", storedBook.getName());
 
     }
     
+    @Test
+    void multipleBooks_viaRestEndpoint() throws JAXBException {
+
+        assertNotNull(restService.getPort());
+        assertTrue(restService.getPort()>0);
+
+        val useRequestDebugLogging = false; 
+        val restfulClient = restService.newClient(useRequestDebugLogging);
+
+        val digest = restService.getMultipleBooks(restfulClient);
+
+        if(!digest.isSuccess()) {
+            fail(digest.getFailureCause());
+        }
+
+        val multipleBooks = digest.getEntities();
+        
+        assertEquals(2, multipleBooks.size());
+        
+        for(val book : multipleBooks) {
+            assertEquals("MultipleBooksTest", book.getName());    
+        }
+
+    }
+    
+    @Test
+    void bookOfTheWeek_asDto_viaRestEndpoint() {
+
+        assertNotNull(restService.getPort());
+        assertTrue(restService.getPort()>0);
+
+        val useRequestDebugLogging = false;
+        val restfulClient = restService.newClient(useRequestDebugLogging);
+
+        val digest = restService.getRecommendedBookOfTheWeekAsDto(restfulClient);
+
+        if(!digest.isSuccess()) {
+            fail(digest.getFailureCause());
+        }
+
+        val bookOfTheWeek = digest.getEntities().getSingletonOrFail();
+
+        assertNotNull(bookOfTheWeek);
+        assertEquals("Book of the week", bookOfTheWeek.getName());
+
+    }
+    
+    @Test
+    void multipleBooks_asDto_viaRestEndpoint() throws JAXBException {
+
+        assertNotNull(restService.getPort());
+        assertTrue(restService.getPort()>0);
+
+        val useRequestDebugLogging = false; 
+        val restfulClient = restService.newClient(useRequestDebugLogging);
+
+        val digest = restService.getMultipleBooksAsDto(restfulClient);
+
+        if(!digest.isSuccess()) {
+            fail(digest.getFailureCause());
+        }
+
+        val multipleBooks = digest.getEntities();
+        
+        assertEquals(2, multipleBooks.size());
+        
+        for(val book : multipleBooks) {
+            assertEquals("MultipleBooksTest", book.getName());    
+        }
+
+    }
     
     
     @Test
@@ -113,7 +185,7 @@ class RestServiceTest {
             fail(digest.getFailureCause());
         }
 
-        val httpSessionInfo = digest.get();
+        val httpSessionInfo = digest.getEntities().getSingletonOrFail();
 
         assertNotNull(httpSessionInfo);
         assertEquals("no http-session", httpSessionInfo);

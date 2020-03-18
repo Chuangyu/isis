@@ -24,24 +24,25 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
-import org.apache.isis.config.IsisConfiguration;
-import org.apache.isis.config.IsisModuleConfig;
-import org.apache.isis.testdomain.Smoketest;
-
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.apache.isis.core.config.IsisConfiguration;
+import org.apache.isis.core.config.IsisModuleCoreConfig;
+import org.apache.isis.core.config.presets.IsisPresets;
+import org.apache.isis.testdomain.Smoketest;
 
 @Smoketest
 @SpringBootTest(
         classes = { 
-                IsisModuleConfig.class
-        }, 
-        properties = {
-                "logging.config=log4j2-test.xml",
-        })
+                IsisModuleCoreConfig.class
+        }
+        )
 @TestPropertySource({
-    "classpath:/application-config-test.properties"
+    "classpath:/application-config-test.properties",
+    IsisPresets.UseLog4j2Test
 })
+
 class IsisConfigBeanTest {
 
     @Inject private IsisConfiguration isisConfiguration;
@@ -49,7 +50,7 @@ class IsisConfigBeanTest {
     @Test
     void configurationBean_shouldBePickedUpBySpring() {
         assertNotNull(isisConfiguration);
-        assertTrue(isisConfiguration.getReflector().getExplicitAnnotations().isAction());
+        assertTrue(isisConfiguration.getApplib().getAnnotation().getAction().isExplicit());
     }
 
 }

@@ -25,9 +25,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 
-import org.apache.isis.config.presets.IsisPresets;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import org.apache.isis.core.config.presets.IsisPresets;
 
 import lombok.val;
 
@@ -37,9 +37,7 @@ import lombok.val;
         },
         properties = {
         })
-@TestPropertySource({
-    IsisPresets.SilenceWicket
-})
+@TestPropertySource(IsisPresets.SilenceWicket)
 public class LoggerSetupTest {
 
     @Configuration

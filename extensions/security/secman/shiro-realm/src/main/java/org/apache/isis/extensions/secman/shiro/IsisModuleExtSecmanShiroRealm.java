@@ -24,9 +24,6 @@ import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
-import org.apache.isis.extensions.secman.shiro.util.ShiroUtils;
-import org.apache.isis.runtime.session.IsisSessionFactory;
-import org.apache.isis.security.api.authorization.standard.Authorizor;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -42,12 +39,16 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import org.apache.isis.applib.services.inject.ServiceInjector;
-import org.apache.isis.commons.internal.assertions._Assert;
+import org.apache.isis.core.commons.internal.assertions._Assert;
+import org.apache.isis.core.runtime.session.IsisSessionFactory;
+import org.apache.isis.core.security.authorization.standard.Authorizor;
 import org.apache.isis.extensions.secman.api.SecurityRealm;
 import org.apache.isis.extensions.secman.api.SecurityRealmCharacteristic;
 import org.apache.isis.extensions.secman.api.encryption.PasswordEncryptionService;
 import org.apache.isis.extensions.secman.api.user.AccountType;
+import org.apache.isis.extensions.secman.api.user.ApplicationUser;
 import org.apache.isis.extensions.secman.api.user.ApplicationUserRepository;
+import org.apache.isis.extensions.secman.shiro.util.ShiroUtils;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -112,7 +113,7 @@ public class IsisModuleExtSecmanShiroRealm extends AuthorizingRealm implements S
             val newPrincipal = createPrincipal_inApplicationUserRepository(username);
 
             _Assert.assertNotNull(newPrincipal);
-            _Assert.assertTrue("Auto-created user accounts must be initially disabled!", newPrincipal.isDisabled());
+            _Assert.assertTrue(newPrincipal.isDisabled(), "Auto-created user accounts must be initially disabled!");
 
             throw disabledAccountException(username); // default behavior after user auto-creation
         }
@@ -220,10 +221,10 @@ public class IsisModuleExtSecmanShiroRealm extends AuthorizingRealm implements S
         return execute(new Supplier<PrincipalForApplicationUser>() {
             @Override
             public PrincipalForApplicationUser get() {
-                val applicationUser = applicationUserRepository.findByUsername(username);
+                val applicationUser = applicationUserRepository.findByUsername(username).orElse(null);
                 return PrincipalForApplicationUser.from(applicationUser);
             }
-            @Inject private ApplicationUserRepository applicationUserRepository;
+            @Inject private ApplicationUserRepository<? extends ApplicationUser> applicationUserRepository;
         });
     }
 
@@ -235,7 +236,7 @@ public class IsisModuleExtSecmanShiroRealm extends AuthorizingRealm implements S
                 val applicationUser = applicationUserRepository.findOrCreateUserByUsername(username);
                 return PrincipalForApplicationUser.from(applicationUser);
             }
-            @Inject private ApplicationUserRepository applicationUserRepository;
+            @Inject private ApplicationUserRepository<? extends ApplicationUser> applicationUserRepository;
         });
     }
 
@@ -267,7 +268,7 @@ public class IsisModuleExtSecmanShiroRealm extends AuthorizingRealm implements S
     }
 
     <V> V execute(final Supplier<V> closure) {
-        return isisSessionFactory.doInSession(
+        return isisSessionFactory.callAnonymous(
                 new Callable<V>() {
                     @Override
                     public V call() {

@@ -1,3 +1,0 @@
-* xref:core:smoketests:about.adoc[SmokeTest app]
-
-

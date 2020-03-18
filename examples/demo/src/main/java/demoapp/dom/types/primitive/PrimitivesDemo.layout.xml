@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <bs3:grid
-	xsi:schemaLocation="http://isis.apache.org/applib/layout/component http://isis.apache.org/applib/layout/component/component.xsd http://isis.apache.org/applib/layout/links http://isis.apache.org/applib/layout/links/links.xsd http://isis.apache.org/applib/layout/grid/bootstrap3 http://isis.apache.org/applib/layout/grid/bootstrap3/bootstrap3.xsd"
-	xmlns:bs3="http://isis.apache.org/applib/layout/grid/bootstrap3"
-	xmlns:cpt="http://isis.apache.org/applib/layout/component"
-	xmlns:lnk="http://isis.apache.org/applib/layout/links"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        xsi:schemaLocation="http://isis.apache.org/applib/layout/component http://isis.apache.org/applib/layout/component/component.xsd   http://isis.apache.org/applib/layout/grid/bootstrap3 http://isis.apache.org/applib/layout/grid/bootstrap3/bootstrap3.xsd"
+        xmlns:bs3="http://isis.apache.org/applib/layout/grid/bootstrap3"
+        xmlns:cpt="http://isis.apache.org/applib/layout/component"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<bs3:row>
 		<bs3:col span="12" unreferencedActions="true">
 			<cpt:domainObject />
@@ -57,7 +56,15 @@
             	<cpt:property id="primitiveFalse"/>
             	<cpt:property id="primitiveTrue"/>
 		        <cpt:property id="javaLangBoolean"/>
+		        <cpt:property id="nullableBoolean"/>
             </cpt:fieldSet>
+            
+            <cpt:fieldSet name="Char" id="char">
+				<cpt:action id="calculateCharacter" />
+				<cpt:action id="calculateCharacters" />
+				<cpt:property id="primitiveChar"/>
+				<cpt:property id="javaLangCharacter" />
+			</cpt:fieldSet>
 		
 			<cpt:fieldSet name="Float" id="float">
 				<cpt:action id="calculateFloat" />

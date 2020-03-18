@@ -18,37 +18,51 @@
  */
 package org.apache.isis.extensions.secman.jdo.dom.user;
 
-import lombok.extern.log4j.Log4j2;
-
-import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.isis.applib.annotation.Action;
-import org.apache.isis.applib.annotation.DomainService;
-import org.apache.isis.applib.annotation.NatureOfService;
-import org.apache.isis.applib.annotation.SemanticsOf;
+import org.springframework.stereotype.Repository;
+
 import org.apache.isis.applib.query.QueryDefault;
 import org.apache.isis.applib.services.factory.FactoryService;
 import org.apache.isis.applib.services.queryresultscache.QueryResultsCache;
 import org.apache.isis.applib.services.repository.RepositoryService;
-import org.apache.isis.applib.value.Password;
-import org.apache.isis.commons.internal.collections._Lists;
+import org.apache.isis.core.commons.internal.base._Casts;
+import org.apache.isis.core.commons.internal.collections._Sets;
+import org.apache.isis.core.commons.internal.exceptions._Exceptions;
+import org.apache.isis.extensions.secman.api.SecurityModuleConfig;
 import org.apache.isis.extensions.secman.api.encryption.PasswordEncryptionService;
 import org.apache.isis.extensions.secman.api.user.AccountType;
 import org.apache.isis.extensions.secman.api.user.ApplicationUserStatus;
 import org.apache.isis.extensions.secman.jdo.dom.role.ApplicationRole;
-import org.apache.isis.extensions.secman.jdo.dom.role.ApplicationRoleRepository;
-import org.springframework.stereotype.Repository;
+import org.apache.isis.extensions.secman.model.dom.user.ApplicationUser_lock;
+import org.apache.isis.extensions.secman.model.dom.user.ApplicationUser_unlock;
+
+import lombok.NonNull;
+import lombok.val;
 
 @Repository
 @Named("isisExtSecman.applicationUserRepository")
-@Log4j2
 public class ApplicationUserRepository
-implements org.apache.isis.extensions.secman.api.user.ApplicationUserRepository {
+implements org.apache.isis.extensions.secman.api.user.ApplicationUserRepository<ApplicationUser> {
 
+    @Inject private FactoryService factoryService;
+    @Inject private RepositoryService repository;
+    @Inject private SecurityModuleConfig configBean;
+    @Inject private Optional<PasswordEncryptionService> passwordEncryptionService; // empty if no candidate is available
+    
+    @Inject private javax.inject.Provider<QueryResultsCache> queryResultsCacheProvider;
+    
+    @Override
+    public ApplicationUser newApplicationUser() {
+        return factoryService.detachedEntity(ApplicationUser.class);
+    }
+    
     // -- findOrCreateUserByUsername (programmatic)
 
     /**
@@ -63,159 +77,94 @@ implements org.apache.isis.extensions.secman.api.user.ApplicationUserRepository 
     public ApplicationUser findOrCreateUserByUsername(
             final String username) {
         // slightly unusual to cache a function that modifies state, but safe because this is idempotent
-        return queryResultsCache.execute(new Callable<ApplicationUser>() {
-            @Override
-            public ApplicationUser call() throws Exception {
-                final ApplicationUser applicationUser = findByUsername(username);
-                if (applicationUser != null) {
-                    return applicationUser;
-                }
-                return newDelegateUser(username, null, null);
-            }
-        }, ApplicationUserRepository.class, "findOrCreateUserByUsername", username);
+        return queryResultsCacheProvider.get().execute(()->
+            findByUsername(username).orElseGet(()->newDelegateUser(username, null)), 
+            ApplicationUserRepository.class, "findOrCreateUserByUsername", username);
     }
 
     // -- findByUsername
 
-    public ApplicationUser findByUsernameCached(final String username) {
-        return queryResultsCache.execute(new Callable<ApplicationUser>() {
-            @Override public ApplicationUser call() throws Exception {
-                return findByUsername(username);
-            }
-        }, ApplicationUserRepository.class, "findByUsernameCached", username);
+    public Optional<ApplicationUser> findByUsernameCached(final String username) {
+        return queryResultsCacheProvider.get().execute(this::findByUsername, 
+                ApplicationUserRepository.class, "findByUsernameCached", username);
     }
 
     @Override
-    public ApplicationUser findByUsername(final String username) {
+    public Optional<ApplicationUser> findByUsername(final String username) {
         return repository.uniqueMatch(new QueryDefault<>(
                 ApplicationUser.class,
-                "findByUsername", "username", username)).orElse(null);
+                "findByUsername", "username", username));
     }
 
     // -- findByEmailAddress (programmatic)
 
-    public ApplicationUser findByEmailAddressCached(final String emailAddress) {
-        return queryResultsCache.execute(new Callable<ApplicationUser>() {
-            @Override public ApplicationUser call() throws Exception {
-                return findByEmailAddress(emailAddress);
-            }
-        }, ApplicationUserRepository.class, "findByEmailAddressCached", emailAddress);
+    public Optional<ApplicationUser> findByEmailAddressCached(final String emailAddress) {
+        return queryResultsCacheProvider.get().execute(this::findByEmailAddress, 
+                ApplicationUserRepository.class, "findByEmailAddressCached", emailAddress);
     }
 
-    public ApplicationUser findByEmailAddress(final String emailAddress) {
+    public Optional<ApplicationUser> findByEmailAddress(final String emailAddress) {
         return repository.uniqueMatch(new QueryDefault<>(
                 ApplicationUser.class,
-                "findByEmailAddress", "emailAddress", emailAddress))
-                .orElse(null);
+                "findByEmailAddress", "emailAddress", emailAddress));
     }
 
     // -- findByName
 
     @Override
-    public List<ApplicationUser> find(final String search) {
+    public Collection<ApplicationUser> find(final String search) {
         final String regex = String.format("(?i).*%s.*", search.replace("*", ".*").replace("?", "."));
         return repository.allMatches(new QueryDefault<>(
                 ApplicationUser.class,
-                "find", "regex", regex));
-    }
-
-    // -- newDelegateUser (action)
-
-    @Override
-    public ApplicationUser newDelegateUser(
-            final String username,
-            final org.apache.isis.extensions.secman.api.role.ApplicationRole initialRole,
-            final Boolean enabled) {
-        final ApplicationUser user = applicationUserFactory.newApplicationUser();
-        user.setUsername(username);
-        user.setStatus(ApplicationUserStatus.parse(enabled));
-        user.setAccountType(AccountType.DELEGATED);
-        if (initialRole != null) {
-            user.addRole((ApplicationRole)initialRole);
-        }
-        repository.persist(user);
-        return user;
-    }
-
-    // -- newLocalUser (action)
-
-    @Override
-    public ApplicationUser newLocalUser(
-            final String username,
-            final Password password,
-            final Password passwordRepeat,
-            final org.apache.isis.extensions.secman.api.role.ApplicationRole initialRole,
-            final Boolean enabled,
-            final String emailAddress) {
-        ApplicationUser user = findByUsername(username);
-        if (user == null) {
-            user = applicationUserFactory.newApplicationUser();
-            user.setUsername(username);
-            user.setStatus(ApplicationUserStatus.parse(enabled));
-            user.setAccountType(AccountType.LOCAL);
-        }
-        if (initialRole != null) {
-            user.addRole((ApplicationRole)initialRole);
-        }
-        if (password != null) {
-            user.updatePassword(password.getPassword());
-        }
-        if (emailAddress != null) {
-            user.updateEmailAddress(emailAddress);
-        }
-        repository.persist(user);
-        return user;
-    }
-
-    @Override
-    public String validateNewLocalUser(
-            final String username,
-            final Password password,
-            final Password passwordRepeat,
-            final org.apache.isis.extensions.secman.api.role.ApplicationRole initialRole,
-            final Boolean enabled,
-            final String emailAddress) {
-        final ApplicationUser user = applicationUserFactory.newApplicationUser();
-        return user.validateResetPassword(password, passwordRepeat);
-    }
-
-    // -- newLocalUserBasedOn (action)
-
-    public ApplicationUser newLocalUserBasedOn(
-            final String username,
-            final Password password,
-            final Password passwordRepeat,
-            final ApplicationUser userWhosRolesShouldBeCloned,
-            final Boolean enabled,
-            final String emailAddress) {
-        final ApplicationUser user = this.newLocalUser(username, password, passwordRepeat, null, enabled, emailAddress);
-        for (ApplicationRole role : userWhosRolesShouldBeCloned.getRoles()) {
-            user.addToRoles(role);
-        }
-        return user;
+                "find", "regex", regex))
+                .stream()
+                .collect(_Sets.toUnmodifiableSorted());
     }
 
     // -- allUsers
 
-    public List<ApplicationUser> findByAtPath(final String atPath) {
+    @Override
+    public Collection<ApplicationUser> findByAtPath(final String atPath) {
         return repository.allMatches(new QueryDefault<>(
                 ApplicationUser.class,
-                "findByAtPath", "atPath", atPath));
+                "findByAtPath", "atPath", atPath))
+                .stream()
+                .collect(_Sets.toUnmodifiableSorted());
+    }
+    
+    @Override
+    public Collection<ApplicationUser> findByRole(
+            org.apache.isis.extensions.secman.api.role.ApplicationRole genericRole) {
+        
+        val role = _Casts.<ApplicationRole>uncheckedCast(genericRole);
+        return role.getUsers()
+                .stream()
+                .collect(_Sets.toUnmodifiableSorted());
+    }
+    
+    @Override
+    public Collection<ApplicationUser> findByTenancy(
+            @NonNull final org.apache.isis.extensions.secman.api.tenancy.ApplicationTenancy genericTenancy) {
+        return findByAtPath(genericTenancy.getPath()) 
+                .stream()
+                .collect(_Sets.toUnmodifiableSorted());
     }
 
     // -- allUsers
 
     @Override
-    public List<ApplicationUser> allUsers() {
-        return repository.allInstances(ApplicationUser.class);
+    public Collection<ApplicationUser> allUsers() {
+        return repository.allInstances(ApplicationUser.class)
+                .stream()
+                .collect(_Sets.toUnmodifiableSorted());
     }
 
-    @Action(semantics = SemanticsOf.SAFE)
-    public List<ApplicationUser> findMatching(final String search) {
+    @Override
+    public Collection<ApplicationUser> findMatching(final String search) {
         if (search != null && search.length() > 0) {
             return find(search);
         }
-        return _Lists.newArrayList();
+        return Collections.emptySortedSet();
     }
     
     // -- UPDATE USER STATE
@@ -223,27 +172,61 @@ implements org.apache.isis.extensions.secman.api.user.ApplicationUserRepository 
     @Override
     public void enable(org.apache.isis.extensions.secman.api.user.ApplicationUser user) {
         if(user.getStatus() != ApplicationUserStatus.ENABLED) {
-            ((ApplicationUser) user).unlock();
+             factoryService.mixin(ApplicationUser_unlock.class, user)
+             .act();
         }
     }
 
     @Override
     public void disable(org.apache.isis.extensions.secman.api.user.ApplicationUser user) {
         if(user.getStatus() != ApplicationUserStatus.DISABLED) {
-            ((ApplicationUser) user).lock();
+            factoryService.mixin(ApplicationUser_lock.class, user)
+            .act();
         }
     }
 
-    // -- DEPENDENCIES
+    @Override
+    public boolean isAdminUser(org.apache.isis.extensions.secman.api.user.ApplicationUser user) {
+        return configBean.getAdminUserName().equals(user.getName());
+    }
 
-    @Inject QueryResultsCache queryResultsCache;
-    @Inject PasswordEncryptionService passwordEncryptionService;
-    @Inject ApplicationRoleRepository applicationRoleRepository;
-    @Inject ApplicationUserFactory applicationUserFactory;
-    @Inject RepositoryService repository;
-    @Inject FactoryService factory;
+    @Override
+    public ApplicationUser newUser(
+            String username, 
+            AccountType accountType,
+            Consumer<ApplicationUser> beforePersist) {
+        
+        val user = newApplicationUser();
+        user.setUsername(username);
+        user.setAccountType(accountType);
+        user.setStatus(ApplicationUserStatus.DISABLED);
+        beforePersist.accept(user);
+        repository.persistAndFlush(user);
+        return user;
+    }
+    
+    @Override
+    public boolean updatePassword(
+            final org.apache.isis.extensions.secman.api.user.ApplicationUser user, 
+            final String password) {
+        // in case called programmatically
+        if(!isPasswordFeatureEnabled(user)) {
+            return false;
+        }
+        val encrypter = passwordEncryptionService.orElseThrow(_Exceptions::unexpectedCodeReach);
+        user.setEncryptedPassword(encrypter.encrypt(password));
+        repository.persistAndFlush(user);
+        return true;
+    }
+    
+    @Override
+    public boolean isPasswordFeatureEnabled(org.apache.isis.extensions.secman.api.user.ApplicationUser user) {
+        return user.isLocalAccount() 
+                /*sonar-ignore-on*/
+                && passwordEncryptionService!=null // if for any reason injection fails
+                /*sonar-ignore-off*/
+                && passwordEncryptionService.isPresent();
+    }
 
-
-
-
+    
 }

@@ -1,4 +1,0 @@
-* xref:vro:restclient:about.adoc[REST Client]
-
-
-

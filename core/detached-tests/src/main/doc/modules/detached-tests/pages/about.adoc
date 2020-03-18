@@ -1,4 +1,0 @@
-= Detached Tests
-include::_attributes.adoc[]
-
-

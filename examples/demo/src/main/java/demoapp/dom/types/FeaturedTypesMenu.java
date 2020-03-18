@@ -27,11 +27,15 @@ import org.apache.isis.applib.annotation.DomainService;
 import org.apache.isis.applib.annotation.NatureOfService;
 import org.apache.isis.applib.services.factory.FactoryService;
 
+import lombok.val;
+
 import demoapp.dom.types.blob.BlobDemo;
+import demoapp.dom.types.clob.ClobDemo;
+import demoapp.dom.types.markup.MarkupDemo;
 import demoapp.dom.types.primitive.PrimitivesDemo;
 import demoapp.dom.types.text.TextDemo;
 import demoapp.dom.types.time.TemporalDemo;
-import lombok.val;
+import demoapp.dom.types.uuid.UuidDemo;
 
 @DomainService(nature=NatureOfService.VIEW, objectType = "demo.FeaturedTypesMenu")
 @DomainObjectLayout(named="Featured Types")
@@ -42,7 +46,7 @@ public class FeaturedTypesMenu {
     @Action
     @ActionLayout(cssClassFa="fa-font")
     public TextDemo text(){
-        val demo = factoryService.instantiate(TextDemo.class);
+        val demo = factoryService.viewModel(TextDemo.class);
         demo.initDefaults();  
         return demo;
     }
@@ -50,7 +54,7 @@ public class FeaturedTypesMenu {
     @Action
     @ActionLayout(cssClassFa="fa-hashtag")
     public PrimitivesDemo primitives(){
-        val demo = factoryService.instantiate(PrimitivesDemo.class);
+        val demo = factoryService.viewModel(PrimitivesDemo.class);
         demo.initDefaults();  
         return demo;
     }
@@ -58,7 +62,15 @@ public class FeaturedTypesMenu {
     @Action
     @ActionLayout(cssClassFa="fa-clock-o")
     public TemporalDemo temporals(){
-        val demo = factoryService.instantiate(TemporalDemo.class);
+        val demo = factoryService.viewModel(TemporalDemo.class);
+        demo.initDefaults();  
+        return demo;
+    }
+    
+    @Action
+    @ActionLayout(cssClassFa="fa-at")
+    public UuidDemo uuid(){
+        val demo = factoryService.viewModel(UuidDemo.class);
         demo.initDefaults();  
         return demo;
     }
@@ -66,7 +78,23 @@ public class FeaturedTypesMenu {
     @Action
     @ActionLayout(cssClassFa="fa-cloud")
     public BlobDemo blobs(){
-        val demo = factoryService.instantiate(BlobDemo.class);
+        val demo = factoryService.viewModel(BlobDemo.class);
+        demo.initDefaults();  
+        return demo;
+    }
+    
+    @Action
+    @ActionLayout(cssClassFa="fa-cloud")
+    public ClobDemo clobs(){
+        val demo = factoryService.viewModel(ClobDemo.class);
+        demo.initDefaults();  
+        return demo;
+    }
+    
+    @Action
+    @ActionLayout(cssClassFa="fa-code")
+    public MarkupDemo markup(){
+        val demo = factoryService.viewModel(MarkupDemo.class);
         demo.initDefaults();  
         return demo;
     }

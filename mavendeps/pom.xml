@@ -70,7 +70,6 @@
 	<dependencyManagement>
 		<dependencies>
 
-			<!-- ISIS CORE -->
 			<dependency>
 				<groupId>org.apache.isis.core</groupId>
 				<artifactId>isis</artifactId>
@@ -79,7 +78,44 @@
 				<scope>import</scope>
 			</dependency>
 
-			<!-- LOMBOK -->
+			<dependency>
+				<groupId>org.apache.isis.testing</groupId>
+				<artifactId>isis-testing</artifactId>
+				<version>2.0.0-M3-SNAPSHOT</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.isis.mavendeps</groupId>
+				<artifactId>isis-mavendeps-unittests</artifactId>
+				<version>2.0.0-M3-SNAPSHOT</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.isis.mavendeps</groupId>
+				<artifactId>isis-mavendeps-integtests</artifactId>
+				<version>2.0.0-M3-SNAPSHOT</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.isis.mavendeps</groupId>
+				<artifactId>isis-mavendeps-integspecs</artifactId>
+				<version>2.0.0-M3-SNAPSHOT</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.isis.mavendeps</groupId>
+				<artifactId>isis-mavendeps-webapp</artifactId>
+				<version>2.0.0-M3-SNAPSHOT</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.isis.mavendeps</groupId>
+				<artifactId>isis-mavendeps-jdk11</artifactId>
+				<version>2.0.0-M3-SNAPSHOT</version>
+			</dependency>
+
 			<dependency>
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok</artifactId>
@@ -87,12 +123,24 @@
 				<scope>provided</scope>
 			</dependency>
 
+			<dependency>
+				<groupId>org.hsqldb</groupId>
+				<artifactId>hsqldb</artifactId>
+			</dependency>
+
+			<dependency>
+				<groupId>com.h2database</groupId>
+				<artifactId>h2</artifactId>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 
 	<modules>
 		<module>jdk11</module>
-		<module>testing</module>
+		<module>unittests</module>
+		<module>integtests</module>
+		<module>integspecs</module>
 		<module>webapp</module>
 	</modules>
 

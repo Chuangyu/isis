@@ -23,46 +23,46 @@ import javax.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import org.apache.isis.applib.services.repository.RepositoryService;
-import org.apache.isis.applib.services.xactn.TransactionService;
-import org.apache.isis.commons.internal.exceptions._Exceptions;
-import org.apache.isis.extensions.fixtures.fixturescripts.FixtureScripts;
-import org.apache.isis.testdomain.Smoketest;
-import org.apache.isis.testdomain.conf.Configuration_usingJdo;
-import org.apache.isis.testdomain.jdo.Book;
-import org.apache.isis.testdomain.jdo.JdoTestDomainPersona;
+import org.springframework.test.context.TestPropertySource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.apache.isis.applib.services.repository.RepositoryService;
+import org.apache.isis.applib.services.xactn.TransactionService;
+import org.apache.isis.core.commons.internal.exceptions._Exceptions;
+import org.apache.isis.core.config.presets.IsisPresets;
+import org.apache.isis.testdomain.Smoketest;
+import org.apache.isis.testdomain.conf.Configuration_usingJdo;
+import org.apache.isis.testdomain.jdo.JdoTestDomainPersona;
+import org.apache.isis.testdomain.jdo.entities.JdoBook;
+import org.apache.isis.testing.fixtures.applib.fixturescripts.FixtureScripts;
+import org.apache.isis.testing.integtestsupport.applib.IsisIntegrationTestAbstract;
 
 @Smoketest
 @SpringBootTest(
         classes = { 
                 Configuration_usingJdo.class,
-        }, 
-        properties = {
-                "logging.config=log4j2-test.xml",
-                //IsisPresets.DebugPersistence,
         })
-class TransactionRollbackTest {
+@TestPropertySource(IsisPresets.UseLog4j2Test)
+class TransactionRollbackTest extends IsisIntegrationTestAbstract {
     
-    @Inject FixtureScripts fixtureScripts;
-    @Inject TransactionService transactionService;
-    @Inject RepositoryService repository;
+    @Inject private FixtureScripts fixtureScripts;
+    @Inject private TransactionService transactionService;
+    @Inject private RepositoryService repository;
     
     @BeforeEach
     void setUp() {
         // cleanup
         fixtureScripts.runPersona(JdoTestDomainPersona.PurgeAll);
-
     }
     
     @Test
     void happyCaseTx_shouldCommit() {
         
         // expected pre condition
-        assertEquals(0, repository.allInstances(Book.class).size());
+        assertEquals(0, repository.allInstances(JdoBook.class).size());
+        
         
         transactionService.executeWithinTransaction(()->{
             
@@ -71,16 +71,16 @@ class TransactionRollbackTest {
         });
         
         // expected post condition
-        assertEquals(1, repository.allInstances(Book.class).size());
-        
+        assertEquals(1, repository.allInstances(JdoBook.class).size());
+
     }
     
     @Test
     void whenExceptionWithinTx_shouldRollback() {
         
         // expected pre condition
-        assertEquals(0, repository.allInstances(Book.class).size());
-        
+        assertEquals(0, repository.allInstances(JdoBook.class).size());
+            
         assertThrows(RuntimeException.class, ()->{
             
             transactionService.executeWithinTransaction(()->{
@@ -94,7 +94,7 @@ class TransactionRollbackTest {
         });
         
         // expected post condition
-        assertEquals(0, repository.allInstances(Book.class).size());
+        assertEquals(0, repository.allInstances(JdoBook.class).size());
         
     }
     

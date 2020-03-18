@@ -30,11 +30,12 @@ import org.apache.shiro.util.ThreadContext;
 import org.apache.shiro.util.ThreadState;
 
 import org.apache.isis.applib.services.inject.ServiceInjector;
-import org.apache.isis.commons.internal.assertions._Assert;
+import org.apache.isis.core.commons.internal.assertions._Assert;
 import org.apache.isis.security.shiro.webmodule.WebModuleShiro.EnvironmentLoaderListenerForIsis;
 
 import lombok.SneakyThrows;
 import lombok.val;
+import lombok.var;
 
 /**
  * 
@@ -98,8 +99,9 @@ class AbstractShiroTest {
         val ini = Ini.fromResourcePath(iniResource);
         val factory = new IniSecurityManagerFactory(ini);
         val securityManager = factory.getInstance();
-        
-        EnvironmentLoaderListenerForIsis.injectServicesIntoReamls(serviceInjector, securityManager);
+
+        var listener = new EnvironmentLoaderListenerForIsis(serviceInjector);
+        listener.injectServicesIntoRealms(securityManager);
         
 //debug        
 //        ini.getSections().forEach(section->{
@@ -121,7 +123,7 @@ class AbstractShiroTest {
         }
         SecurityUtils.setSecurityManager(securityManager);
         
-        _Assert.assertEquals("expected same object", securityManager, SecurityUtils.getSecurityManager());
+        _Assert.assertEquals(securityManager, SecurityUtils.getSecurityManager(), "expected same object");
     }
 
     protected static SecurityManager getSecurityManager() {
@@ -140,6 +142,7 @@ class AbstractShiroTest {
             // mock Subject instances)
         }
         SecurityUtils.setSecurityManager(null);
+
     }
 
 }

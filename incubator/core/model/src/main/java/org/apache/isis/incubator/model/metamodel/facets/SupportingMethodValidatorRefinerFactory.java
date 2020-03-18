@@ -19,34 +19,35 @@
 package org.apache.isis.incubator.model.metamodel.facets;
 
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.isis.incubator.model.applib.annotation.Supporting;
-import org.apache.isis.commons.internal.collections._Lists;
-import org.apache.isis.commons.internal.collections._Sets;
-import org.apache.isis.metamodel.commons.MethodUtil;
-import org.apache.isis.metamodel.facetapi.FacetHolder;
-import org.apache.isis.metamodel.facetapi.MetaModelRefiner;
-import org.apache.isis.metamodel.facets.FacetFactoryAbstract;
-import org.apache.isis.metamodel.facets.ImperativeFacet;
-import org.apache.isis.metamodel.progmodel.ProgrammingModel;
-import org.apache.isis.metamodel.spec.ObjectSpecification;
-
-import lombok.val;
+import org.apache.isis.core.commons.collections.ImmutableEnumSet;
+import org.apache.isis.core.commons.internal.collections._Lists;
+import org.apache.isis.core.commons.internal.collections._Sets;
+import org.apache.isis.core.metamodel.commons.MethodUtil;
+import org.apache.isis.core.metamodel.facetapi.FacetHolder;
+import org.apache.isis.core.metamodel.facetapi.FeatureType;
+import org.apache.isis.core.metamodel.facetapi.MetaModelRefiner;
+import org.apache.isis.core.metamodel.facets.FacetFactoryAbstract;
+import org.apache.isis.core.metamodel.facets.ImperativeFacet;
+import org.apache.isis.core.metamodel.progmodel.ProgrammingModel;
+import org.apache.isis.core.metamodel.spec.ObjectSpecification;
+import org.apache.isis.incubator.model.applib.annotation.Model;
 
 /**
  * 
  * @since 2.0
  *
  */
-public class SupportingMethodValidatorRefinerFactory extends FacetFactoryAbstract 
+public class SupportingMethodValidatorRefinerFactory 
+extends FacetFactoryAbstract 
 implements MetaModelRefiner {
 
     public SupportingMethodValidatorRefinerFactory() {
-        super(Collections.emptyList()); // does not contribute any facets
+        super(ImmutableEnumSet.noneOf(FeatureType.class)); // does not contribute any facets
     }
 
     @Override
@@ -59,34 +60,48 @@ implements MetaModelRefiner {
 
         programmingModel.addValidator((spec, validationFailures) -> {
 
-            val type = spec.getCorrespondingClass();
+            final Class<?> type = spec.getCorrespondingClass();
 
-            // methods known to the metamodel
-            val recognizedMethods = spec.streamFacetHolders()
+//XXX for debugging ...            
+//            if(spec.getSpecId().asString().contains("ProperMemberSupport")) {
+//                
+//                val sb = new StringBuffer();
+//                
+//                sb.append("\n### debug " + spec.getSpecId().asString()).append("\n");
+//                
+//                spec.streamFacetHolders()
+//                .flatMap(FacetHolder::streamFacets)
+//                .forEach(facet->sb.append("facet: " + facet).append("\n"));
+//                
+//                System.out.println(sb);
+//            }
+
+            // methods known to the meta-model
+            final HashSet<Method> recognizedMethods = spec.streamFacetHolders()
                     .flatMap(FacetHolder::streamFacets)
                     .filter(ImperativeFacet.class::isInstance)
                     .map(ImperativeFacet.class::cast)
                     .map(ImperativeFacet::getMethods)
                     .flatMap(List::stream)
                     .collect(Collectors.toCollection(HashSet::new));
-
-            // methods intended by the coder to be known to the metamodel
-            val intendedMethods = _Sets.<Method>newHashSet(); 
-            for(val method: type.getDeclaredMethods()) {
-                if(method.getDeclaredAnnotation(Supporting.class)!=null) {
+            
+            // methods intended to be included with the meta-model
+            final HashSet<Method> intendedMethods = _Sets.<Method>newHashSet();
+            for(Method method: type.getDeclaredMethods()) {
+                if(method.getDeclaredAnnotation(Model.class)!=null) {
                     intendedMethods.add(method);
                 }
             }
 
-            // methods intended by the coder but not known to the metamodel
-            val notRecognizedMethods =
+            // methods intended to be included with the meta-model but missing
+            final Set<Method> notRecognizedMethods =
                     _Sets.minus(intendedMethods, recognizedMethods);
 
             // find reasons about why these are not recognized    
             notRecognizedMethods.forEach(notRecognizedMethod->{
-                val unmetContraints = unmetContraints(spec, notRecognizedMethod);
+                final List<String>  unmetContraints = unmetContraints(spec, notRecognizedMethod);
 
-                val messageFormat = "%s#%s: has annotion %s, is assumed to support "
+                String messageFormat = "%s#%s: has annotation @%s, is assumed to support "
                         + "a property, collection or action. Unmet constraint(s): %s";
                 validationFailures.onFailure(
                         spec,
@@ -94,7 +109,7 @@ implements MetaModelRefiner {
                         messageFormat,
                         spec.getIdentifier().getClassName(),
                         notRecognizedMethod.getName(),
-                        Supporting.class.getSimpleName(),
+                        Model.class.getSimpleName(),
                         unmetContraints.stream()
                         .collect(Collectors.joining("; ")));
             });
@@ -112,7 +127,7 @@ implements MetaModelRefiner {
             Method method) {
 
         //val type = spec.getCorrespondingClass();
-        val unmetContraints = _Lists.<String>newArrayList();
+        final List<String> unmetContraints = _Lists.<String>newArrayList();
 
         if (!MethodUtil.isPublic(method)) {
             unmetContraints.add("method must be 'public'");

@@ -18,8 +18,6 @@
  */
 package org.apache.isis.testdomain.publishing;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -29,53 +27,67 @@ import javax.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import org.apache.isis.applib.services.iactn.Interaction.Execution;
-import org.apache.isis.applib.services.publish.PublishedObjects;
-import org.apache.isis.applib.services.publish.PublisherService;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.apache.isis.applib.services.repository.RepositoryService;
+import org.apache.isis.applib.services.wrapper.DisabledException;
 import org.apache.isis.applib.services.wrapper.WrapperFactory;
-import org.apache.isis.applib.services.wrapper.WrapperFactory.ExecutionMode;
-import org.apache.isis.extensions.fixtures.fixturescripts.FixtureScripts;
-import org.apache.isis.testdomain.Incubating;
+import org.apache.isis.applib.services.wrapper.control.AsyncControl;
+import org.apache.isis.core.config.presets.IsisPresets;
 import org.apache.isis.testdomain.Smoketest;
 import org.apache.isis.testdomain.conf.Configuration_usingJdo;
-import org.apache.isis.testdomain.jdo.Book;
 import org.apache.isis.testdomain.jdo.JdoTestDomainPersona;
+import org.apache.isis.testdomain.jdo.entities.JdoBook;
+import org.apache.isis.testdomain.util.kv.KVStoreForTesting;
+import org.apache.isis.testing.fixtures.applib.fixturescripts.FixtureScripts;
+import org.apache.isis.testing.integtestsupport.applib.IsisIntegrationTestAbstract;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.apache.isis.applib.services.wrapper.control.AsyncControl.control;
 
-import lombok.Getter;
 import lombok.val;
 
 @Smoketest
 @SpringBootTest(
-        classes = { 
-                Configuration_usingJdo.class, 
-                PublisherServiceTest.PublisherServiceProbe.class
+        classes = {
+                Configuration_usingJdo.class,
+                Configuration_usingPublishing.class
         }, 
         properties = {
-                "logging.config=log4j2-test.xml",
-                "logging.level.org.apache.isis.incubator.IsisPlatformTransactionManagerForJdo=DEBUG",
-                // "isis.reflector.introspector.parallelize=false",
-                // "logging.level.org.apache.isis.metamodel.specloader.specimpl.ObjectSpecificationAbstract=TRACE"
+                "logging.level.org.apache.isis.persistence.jdo.datanucleus5.persistence.IsisTransactionJdo=DEBUG"
         })
+@TestPropertySource({
+    IsisPresets.SilenceWicket, // just to have any config properties at all
+    IsisPresets.UseLog4j2Test
+})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@Incubating("inconsitent state when run in a test batch")
-class PublisherServiceTest {
+@DirtiesContext // because of the temporary installed PublisherServiceProbe
+//@Incubating("fails when run with surefire")
+class PublisherServiceTest extends IsisIntegrationTestAbstract {
 
     @Inject private RepositoryService repository;
     @Inject private FixtureScripts fixtureScripts;
     @Inject private WrapperFactory wrapper;
-    @Inject private PublisherServiceProbe publisherService;
     @Inject private PlatformTransactionManager txMan; 
-
+    @Inject private KVStoreForTesting kvStore;
+    //@Inject private javax.inject.Provider<PublisherDispatchService> publisherDispatchServiceProvider;
+    //@Inject private List<PublisherService> publisherServices;
+    
+    @Configuration
+    public class Config {
+        // so that we get a new ApplicationContext.
+    }
+    
     @BeforeEach
     void setUp() {
 
@@ -86,13 +98,16 @@ class PublisherServiceTest {
         fixtureScripts.runPersona(JdoTestDomainPersona.InventoryWith1Book);
     }
 
-    @Test @Order(1)
-    void publisherServiceShouldBeAwareOfInventoryChanges() {
+    @Test @Order(1) @Tag("Incubating")
+    void publisherService_shouldBeAwareOfInventoryChanges() {
 
         // given
-        val book = repository.allInstances(Book.class).listIterator().next();
-        publisherService.clearHistory();
+        val book = repository.allInstances(JdoBook.class).listIterator().next();
+        kvStore.clear(PublisherServiceForTesting.class);
 
+        val latch = kvStore.latch(PublisherServiceForTesting.class);
+        
+        
         // when - running within its own transactional boundary
         val transactionTemplate = new TransactionTemplate(txMan);
         transactionTemplate.execute(status -> {
@@ -101,72 +116,84 @@ class PublisherServiceTest {
             repository.persist(book);
 
             // then - before the commit
-            assertEquals("{}", publisherService.getHistory().toString());
-
+            assertEquals(0, kvStore.countEntries(PublisherServiceForTesting.class));
+            
             return null;
         });
-
+        
+        latch.await(2, TimeUnit.SECONDS);
+        
+        System.err.println("!!! after sync writes");
+        
+        
         // then - after the commit
-        val history = publisherService.getHistory();
-        assertEquals(0, history.get("created"));
-        assertEquals(0, history.get("deleted"));
-        assertEquals(0, history.get("loaded"));
-        assertEquals(1, history.get("updated"));
-        assertEquals(1, history.get("modified"));
+        assertEquals(0, getValue("created"));
+        assertEquals(0, getValue("deleted"));
+        assertEquals(0, getValue("loaded"));
+        assertEquals(1, getValue("updated"));
+        assertEquals(1, getValue("modified"));
 
     }
 
-    @Test @Order(2)
-    void publisherServiceShouldBeAwareOfInventoryChanges_whenUsingAsyncExecution() 
+    @Test @Order(2) @Tag("Incubating")
+    void publisherService_shouldBeAwareOfInventoryChanges_whenUsingAsyncExecution() 
             throws InterruptedException, ExecutionException, TimeoutException {
 
         // given
-        val book = repository.allInstances(Book.class).listIterator().next();
-        publisherService.clearHistory();
+        val book = repository.allInstances(JdoBook.class).listIterator().next();
+        kvStore.clear(PublisherServiceForTesting.class);
+        val latch = kvStore.latch(PublisherServiceForTesting.class);
 
         // when - running within its own background task
-        val future = wrapper.async(book, ExecutionMode.SKIP_RULES) //TODO why do we fail when not skipping rules?
-                .run(Book::setName, "Book #2");
+        AsyncControl<Void> control = control().withSkipRules();
+        wrapper.asyncWrap(book, control).setName("Book #2"); // don't enforce rules for this test
 
-        future.get(1000, TimeUnit.SECONDS);
+        control.getFuture().get(10, TimeUnit.SECONDS);
+
+        latch.await(2, TimeUnit.SECONDS);
+        
+        System.err.println("!!! after wait");
 
         // then - after the commit
-        val history = publisherService.getHistory();
-        assertEquals(0, history.get("created"));
-        assertEquals(1, history.get("deleted"));
-        //assertEquals(0, history.get("loaded"));
-        assertEquals(2, history.get("updated"));
-        assertEquals(1, history.get("modified"));
+        assertEquals(0, getValue("created"));
+        assertEquals(0, getValue("deleted"));
+        //assertEquals(0, getValue("loaded"));
+        assertEquals(1, getValue("updated"));
+        assertEquals(1, getValue("modified"));
+
+    }
+    
+    
+    @Test @Order(3) @Tag("Incubating")
+    void publisherService_shouldNotBeAwareOfInventoryChanges_whenUsingAsyncExecutionFails() 
+            throws InterruptedException, ExecutionException, TimeoutException {
+
+        // given
+        val book = repository.allInstances(JdoBook.class).listIterator().next();
+        kvStore.clear(PublisherServiceForTesting.class);
+
+        // when - running within its own background task
+        assertThrows(DisabledException.class, ()->{
+
+            wrapper.asyncWrap(book, control()).setName("Book #2");
+            
+            control().getFuture().get(10, TimeUnit.SECONDS);
+            
+        });
+
+        // then - after the commit
+        assertEquals(null, getValue("created"));
+        assertEquals(null, getValue("deleted"));
+        assertEquals(null, getValue("loaded"));
+        assertEquals(null, getValue("updated"));
+        assertEquals(null, getValue("modified"));
 
     }
 
     // -- HELPER
-
-    @Service
-    public static class PublisherServiceProbe implements PublisherService {
-
-        @Getter
-        private final Map<String, Integer> history = new HashMap<>();
-        
-        void clearHistory() {
-            history.clear();
-        }
-
-
-        @Override
-        public void publish(Execution<?, ?> execution) {
-            history.put("execution", 999);
-        }
-
-        @Override
-        public void publish(PublishedObjects publishedObjects) {
-            history.put("created", publishedObjects.getNumberCreated());
-            history.put("deleted", publishedObjects.getNumberDeleted());
-            history.put("loaded", publishedObjects.getNumberLoaded());
-            history.put("updated", publishedObjects.getNumberUpdated());
-            history.put("modified", publishedObjects.getNumberPropertiesModified());
-        }
-
+    
+    private Object getValue(String keyStr) {
+        return kvStore.get(PublisherServiceForTesting.class, keyStr).orElse(null);
     }
 
 }

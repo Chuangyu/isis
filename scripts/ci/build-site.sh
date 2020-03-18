@@ -1,74 +1,23 @@
 #!/bin/bash
-set -e
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
 
-SCRIPT_DIR=$( dirname "$0" )
-if [ -z "$PROJECT_ROOT_PATH" ]; then
-  PROJECT_ROOT_PATH=`cd $SCRIPT_DIR/../.. ; pwd`
-fi
+export SKIP_EXAMPLES=true
+export SKIP_CONFIGS=true
+export SKIP_STALE_EXAMPLE_CHECK=true
 
-if [ -z "$REVISION" ]; then
-  if [ ! -z "$SHARED_VARS_FILE" ] && [ -f "$SHARED_VARS_FILE" ]; then
-    . $SHARED_VARS_FILE
-    export $(cut -d= -f1 $SHARED_VARS_FILE)
-  fi
-fi
-
-if [ -z "$REVISION" ]; then
-  export REVISION="SNAPSHOT"
-fi
-
-
-SITE_CONFIG=$1
-
-
-##
-## run groovy
-##
-GROOVY_CMD=`command -v groovy`
-
-bash $SCRIPT_DIR/print-environment.sh "build-site"
-
-echo ""
-echo "\$SITE_CONFIG: ${SITE_CONFIG}"
-echo "\$GROOVY_CMD : ${GROOVY_CMD}"
-echo ""
- 
-# for now meant to run with nightly builds only 
-if [ -z "${GROOVY_CMD}" ]; then
-  echo "doc gen: no groovy, skipping"
-else
-  if [ ! -f "$PROJECT_ROOT_PATH/core/config/target/classes/META-INF/spring-configuration-metadata.json" ]; then
-    echo "doc gen: no spring-configuration-metadata.json to parse: skipping"
-  else
-    # generate automated site content (adoc files)
-    echo "doc gen: generating config .adoc from Spring metadata ..."
-    ${GROOVY_CMD} $SCRIPT_DIR/../generateConfigDocs.groovy \
-      -f $PROJECT_ROOT_PATH/core/config/target/classes/META-INF/spring-configuration-metadata.json \
-      -o $PROJECT_ROOT_PATH/core/config/src/main/doc/modules/config/examples/generated
-  fi
-fi
-
-
-##
-## copy over examples
-##
-echo "copying over examples ..."
-for examples_sh in $(find $PROJECT_ROOT_PATH -name examples.sh -print)
-do
-  echo $examples_sh
-  sh $examples_sh
-done
-
-
-##
-## run antora
-##
-echo "running antora ..."
-if [ -z "$ANTORA_CMD" ]; then
-  ANTORA_CMD=$(npm bin)/antora
-fi
-
-$ANTORA_CMD --stacktrace $SITE_CONFIG
-
-# add a marker, that tells github not to use jekyll on the github pages folder
-touch ${PROJECT_ROOT_PATH}/antora/target/site/.nojekyll
+sh scripts/ci/_build-site.sh $*

@@ -22,17 +22,18 @@ import org.apache.isis.applib.annotation.Action;
 import org.apache.isis.applib.annotation.ActionLayout;
 import org.apache.isis.applib.annotation.DomainObject;
 import org.apache.isis.applib.annotation.Nature;
-import org.apache.isis.applib.tree.TreeNode;
-import org.apache.isis.applib.tree.TreePath;
+import org.apache.isis.applib.graph.tree.TreeNode;
+import org.apache.isis.applib.graph.tree.TreePath;
+
+import lombok.val;
 
 import demoapp.utils.DemoStub;
-import lombok.val;
 
 @DomainObject(nature = Nature.VIEW_MODEL, objectType = "demo.Tree")
 public class TreeDemo extends DemoStub {
 
     // this is the actual view model rendered by the framework
-    private final static TreeNode<FileNode> createTree() {
+    private static final TreeNode<FileNode> createTree() {
         val root = FileNodeFactory.defaultRoot();
         val tree = TreeNode.lazy(root, FileSystemTreeAdapter.class);
         tree.expand(TreePath.of(0)); // expand the root node
@@ -51,8 +52,8 @@ public class TreeDemo extends DemoStub {
      * 
      * @return the demo tree view model for standalone rendering (as action result)
      */
-    @Action
     @ActionLayout(cssClassFa="fa-tree")
+    @Action
     public TreeNode<FileNode> standalone(){
         return createTree();
     }

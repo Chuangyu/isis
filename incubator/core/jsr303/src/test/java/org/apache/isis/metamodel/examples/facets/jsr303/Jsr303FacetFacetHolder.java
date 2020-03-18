@@ -18,10 +18,7 @@
  */
 
 
-package org.apache.isis.metamodel.examples.facets.jsr303;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+package org.apache.isis.core.metamodel.examples.facets.jsr303;
 
 import org.jmock.Mockery;
 import org.jmock.integration.junit4.JMock;
@@ -31,8 +28,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.apache.isis.metamodel.examples.facets.jsr303.Jsr303PropertyValidationFacet;
-import org.apache.isis.metamodel.facets.FacetHolder;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
+import org.apache.isis.core.metamodel.examples.facets.jsr303.Jsr303PropertyValidationFacet;
+import org.apache.isis.core.metamodel.facets.FacetHolder;
 
 
 

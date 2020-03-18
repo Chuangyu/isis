@@ -18,17 +18,18 @@
  */
 
 
-package org.apache.isis.metamodel.examples.facets.jsr303;
+package org.apache.isis.core.metamodel.examples.facets.jsr303;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.collection.IsArrayContaining.hasItemInArray;
 import static org.junit.Assert.assertThat;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.apache.isis.metamodel.examples.facets.jsr303.Jsr303FacetFactory;
-import org.apache.isis.metamodel.spec.feature.ObjectFeatureType;
+import org.apache.isis.core.metamodel.examples.facets.jsr303.Jsr303FacetFactory;
+import org.apache.isis.core.metamodel.spec.feature.ObjectFeatureType;
 
 
 

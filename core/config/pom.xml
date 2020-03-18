@@ -26,7 +26,7 @@
         <version>2.0.0-M3-SNAPSHOT</version>
     </parent>
 
-    <artifactId>isis-config</artifactId>
+    <artifactId>isis-core-config</artifactId>
 
     <name>Apache Isis Core - Configuration</name>
     <description>
@@ -34,8 +34,8 @@
     </description>
 
     <properties>
-        <jar-plugin.automaticModuleName>org.apache.isis.config</jar-plugin.automaticModuleName>
-        <git-plugin.propertiesDir>org/apache/isis/config</git-plugin.propertiesDir>
+        <jar-plugin.automaticModuleName>org.apache.isis.core.config</jar-plugin.automaticModuleName>
+        <git-plugin.propertiesDir>org/apache/isis/core/config</git-plugin.propertiesDir>
     </properties>
 
     <build>
@@ -63,6 +63,15 @@
             <groupId>org.apache.isis.core</groupId>
             <artifactId>isis-applib</artifactId>
         </dependency>
+    	<dependency>
+            <groupId>org.apache.isis.core</groupId>
+            <artifactId>isis-core-commons</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+        </dependency>
         
 		<!-- IDE support (optional) -->
 		<dependency>
@@ -74,7 +83,7 @@
         <!-- TESTS -->
         <dependency>
             <groupId>org.apache.isis.core</groupId>
-            <artifactId>isis-unittestsupport</artifactId>
+            <artifactId>isis-core-internaltestsupport</artifactId>
             <scope>test</scope>
         </dependency>
 

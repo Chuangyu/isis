@@ -28,66 +28,15 @@
     </parent>
 
     <artifactId>isis-extensions-exceldownload</artifactId>
-    <name>Apache Isis Ext - Excel Download</name>
-    <description></description>
+    <name>Apache Isis Ext - Wicket Viewer - Excel Download (parent)</name>
+    <description>
+        A component for Apache Isis' Wicket viewer, providing an alternative representation of collections to be downloaded as an Excel spreadsheet.
+    </description>
+    <packaging>pom</packaging>
 
-    <properties>
-        <jar-plugin.automaticModuleName>org.apache.isis.extensions.exceldownload</jar-plugin.automaticModuleName>
-        <git-plugin.propertiesDir>org/apache/isis/extensions/exceldownload</git-plugin.propertiesDir>
-    </properties>
+    <modules>
+        <module>ui</module>
+    </modules>
 
-    <dependencies>
-	
-        <dependency>
-            <groupId>org.apache.isis.core</groupId>
-            <artifactId>isis-viewer-wicket-ui</artifactId>
-            <scope>provided</scope>
-            <exclusions>
-            	<exclusion>
-            		<groupId>org.apache.commons</groupId>
-            		<artifactId>commons-collections4</artifactId>
-            	</exclusion>
-            </exclusions>
-        </dependency>
-        
-        <dependency>
-			<groupId>org.apache.poi</groupId>
-			<artifactId>poi-ooxml</artifactId>
-			<exclusions>
-				<exclusion>
-					<!-- version clash with org.apache.wicket:wicket-util:8.6.1 -->
-					<groupId>org.apache.commons</groupId>
-					<artifactId>commons-collections4</artifactId>
-				</exclusion>
-			</exclusions>
-        </dependency>
-		
-		<dependency>
-			<groupId>org.apache.poi</groupId>
-			<artifactId>poi-ooxml-schemas</artifactId>
-		</dependency>
-
-    </dependencies>
-
-    <profiles>
-
-        <profile>
-            <id>resolve-dependency-convergence</id>
-            <activation>
-                <property>
-                    <name>!skip.resolve-dependency-convergence</name>
-                </property>
-            </activation>
-            <dependencyManagement>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.commons</groupId>
-                        <artifactId>commons-collections4</artifactId>
-                        <version>4.4</version>
-                    </dependency>
-                </dependencies>
-            </dependencyManagement>
-        </profile>
-    </profiles>
 
 </project>

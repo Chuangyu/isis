@@ -40,14 +40,14 @@
     <dependencies>
 	
     	<dependency>
-			<groupId>org.apache.isis.core</groupId>
+            <groupId>org.apache.isis.security</groupId>
 			<artifactId>isis-security-shiro</artifactId>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.isis.core</groupId>
-			<artifactId>isis-runtime</artifactId>
+			<artifactId>isis-core-runtime</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		

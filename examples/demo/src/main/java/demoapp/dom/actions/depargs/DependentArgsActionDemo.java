@@ -33,8 +33,9 @@ import org.apache.isis.applib.annotation.Nature;
 import org.apache.isis.applib.annotation.PropertyLayout;
 import org.apache.isis.applib.value.Markup;
 
-import demoapp.utils.DemoStub;
 import lombok.Getter;
+
+import demoapp.utils.DemoStub;
 
 @XmlRootElement(name = "Demo")
 @XmlType
@@ -42,13 +43,16 @@ import lombok.Getter;
 @DomainObject(nature=Nature.VIEW_MODEL, objectType = "demo.DependentArgs", editing=Editing.ENABLED)
 public class DependentArgsActionDemo extends DemoStub {
 
-    // -- INIT
-
     @Getter private final Set<DemoItem> items = new LinkedHashSet<>();
 
     @PropertyLayout(labelPosition=LabelPosition.NONE)
-    public Markup getText() {
+    public Markup getDependentText() {
         return new Markup("Click one of these 5 actions to see how dependent arguments work.");
+    }
+    
+    @PropertyLayout(labelPosition=LabelPosition.NONE)
+    public Markup getIndependentText() {
+        return new Markup("Click this action to see independent arguments do not clear other on changing.");
     }
 
     @Override
@@ -59,6 +63,7 @@ public class DependentArgsActionDemo extends DemoStub {
         items.add(DemoItem.of("third", Parity.ODD));
         items.add(DemoItem.of("last", Parity.EVEN));
     }
+    
 
 }
 

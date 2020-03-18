@@ -23,7 +23,7 @@ import org.apache.isis.applib.annotation.MemberOrder;
 import org.apache.isis.applib.annotation.Optionality;
 import org.apache.isis.applib.annotation.Property;
 import org.apache.isis.applib.annotation.ViewModelLayout;
-import org.apache.isis.metamodel.services.appfeat.ApplicationFeatureId;
+import org.apache.isis.core.metamodel.services.appfeat.ApplicationFeatureId;
 
 @DomainObject(
         objectType = "isissecurity.ApplicationClassProperty"
@@ -70,7 +70,7 @@ public class ApplicationClassProperty extends ApplicationClassMember {
             )
     @MemberOrder(name="Detail", sequence = "2.7")
     public boolean isDerived() {
-        return getFeature().isDerived();
+        return Boolean.TRUE.equals(getFeature().getDerived());
     }
 
 

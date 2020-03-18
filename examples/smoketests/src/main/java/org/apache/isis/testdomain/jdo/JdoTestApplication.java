@@ -20,8 +20,8 @@ package org.apache.isis.testdomain.jdo;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+/** seems required by RestServiceTest */
 @SpringBootApplication(scanBasePackageClasses= {JdoTestDomainModule.class})
 public class JdoTestApplication {
-
 
 }

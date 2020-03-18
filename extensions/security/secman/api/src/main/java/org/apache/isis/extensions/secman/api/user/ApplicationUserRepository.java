@@ -18,30 +18,77 @@
  */
 package org.apache.isis.extensions.secman.api.user;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.function.Consumer;
+
+import javax.annotation.Nullable;
 
 import org.apache.isis.applib.value.Password;
 import org.apache.isis.extensions.secman.api.role.ApplicationRole;
+import org.apache.isis.extensions.secman.api.tenancy.ApplicationTenancy;
 
-public interface ApplicationUserRepository {
+import lombok.NonNull;
 
-    ApplicationUser findByUsername(String username);
+public interface ApplicationUserRepository<U extends ApplicationUser> {
 
-    ApplicationUser findOrCreateUserByUsername(String username);
+    /**
+     * @return detached entity
+     */
+    U newApplicationUser();
 
-    List<? extends ApplicationUser> allUsers();
+    Optional<U> findByUsername(String username);
+    U findOrCreateUserByUsername(String username);
 
-    List<? extends ApplicationUser> find(String search);
+    Collection<U> allUsers();
+    Collection<U> find(String search);
+    Collection<U> findByAtPath(String atPath);
+    Collection<U> findByRole(ApplicationRole role);
+    Collection<U> findByTenancy(ApplicationTenancy tenancy);
+    
+    /**
+     * auto-complete support
+     * @param search
+     */
+    Collection<U> findMatching(String search);
 
-    String validateNewLocalUser(String username, Password password, Password passwordRepeat,
-            ApplicationRole initialRole, Boolean enabled, String emailAddress);
+    void enable(ApplicationUser user);
+    void disable(ApplicationUser user);
 
-    ApplicationUser newLocalUser(String username, Password password, Password passwordRepeat,
-            ApplicationRole initialRole, Boolean enabled, String emailAddress);
+    boolean isAdminUser(ApplicationUser user);
+    boolean isPasswordFeatureEnabled(ApplicationUser holder);
 
-    ApplicationUser newDelegateUser(String username, ApplicationRole initialRole, Boolean enabled);
+    boolean updatePassword(ApplicationUser user, String password);
+    
+    U newUser(String username, AccountType accountType, Consumer<U> beforePersist);
 
-    void enable(ApplicationUser svenUser);
-    void disable(ApplicationUser svenUser);
+    default U newLocalUser(
+            @NonNull String username, 
+            @Nullable Password password,
+            @NonNull ApplicationUserStatus status) {
+
+        return newUser(username, AccountType.LOCAL, user->{
+
+            user.setStatus(status);
+
+            if (password != null) {
+                updatePassword(user, password.getPassword());
+            }
+
+        });
+    }
+
+    default U newDelegateUser(
+            String username,
+            ApplicationUserStatus status) {
+
+        return newUser(username, AccountType.DELEGATED, user->{
+            user.setStatus(status);
+        });
+
+    }
+
+    
+
 
 }

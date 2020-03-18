@@ -25,21 +25,21 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.ReflectionUtils;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import org.apache.isis.applib.annotation.Action;
 import org.apache.isis.applib.events.domain.ActionDomainEvent;
 import org.apache.isis.applib.services.jaxb.JaxbService;
 import org.apache.isis.applib.services.metamodel.MetaModelService;
-import org.apache.isis.commons.internal.reflection._Annotations;
-import org.apache.isis.config.presets.IsisPresets;
-import org.apache.isis.schema.metamodel.v1.DomainClassDto;
+import org.apache.isis.core.commons.internal.reflection._Annotations;
+import org.apache.isis.core.config.presets.IsisPresets;
+import org.apache.isis.schema.metamodel.v2.DomainClassDto;
 import org.apache.isis.testdomain.Smoketest;
 import org.apache.isis.testdomain.conf.Configuration_headless;
 import org.apache.isis.testdomain.model.bad.Configuration_usingInvalidDomain;
 import org.apache.isis.testdomain.model.bad.InvalidPropertyAnnotationOnAction;
 import org.apache.isis.testdomain.model.good.Configuration_usingValidDomain;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import lombok.val;
 
@@ -51,7 +51,7 @@ import lombok.val;
                 Configuration_usingInvalidDomain.class
         }, 
         properties = {
-                "isis.reflector.introspector.mode=FULL"
+                "isis.core.meta-model.introspector.mode=FULL"
         })
 @TestPropertySource({
     //IsisPresets.DebugMetaModel,
@@ -101,7 +101,7 @@ class AnnotationSyntesizerTest {
         }
         System.out.println("!!! ---");
 
-//        val validateDomainModel = new ValidateDomainModel();
+//        val validateDomainModel = new DomainModelValidator();
 //        validateDomainModel.run(); // should not throw
 
     }

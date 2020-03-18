@@ -18,19 +18,52 @@
  */
 package org.apache.isis.extensions.secman.api.permission;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.Optional;
 
-import org.apache.isis.metamodel.services.appfeat.ApplicationFeatureId;
+import org.apache.isis.core.metamodel.services.appfeat.ApplicationFeatureId;
+import org.apache.isis.core.metamodel.services.appfeat.ApplicationFeatureType;
+import org.apache.isis.extensions.secman.api.role.ApplicationRole;
 
-public interface ApplicationPermissionRepository {
+public interface ApplicationPermissionRepository<P extends ApplicationPermission> {
 
-    ApplicationPermission findByUserAndPermissionValue(String username,
-            ApplicationPermissionValue changingPermissionValue);
+    Optional<P> findByUserAndPermissionValue(String username, ApplicationPermissionValue changingPermissionValue);
 
-    List<? extends ApplicationPermission> findByFeatureCached(ApplicationFeatureId featureId);
+    Optional<P> findByRoleAndRuleAndFeature(
+            ApplicationRole holder, 
+            ApplicationPermissionRule rule,
+            ApplicationFeatureType type, 
+            String featureFqn);
 
-    List<? extends ApplicationPermission> findOrphaned();
+    Collection<P> allPermissions();
+    
+    Collection<P> findOrphaned();
+    Collection<P> findByFeatureCached(ApplicationFeatureId featureId);
+    Collection<P> findByRoleAndRuleAndFeatureTypeCached(
+            ApplicationRole holder,
+            ApplicationPermissionRule rule, 
+            ApplicationFeatureType type);
 
-    List<? extends ApplicationPermission> allPermissions();
+
+    /**
+     * @return detached entity
+     */
+    P newApplicationPermission();
+    
+    P newPermission(
+            ApplicationRole role,
+            ApplicationPermissionRule rule, 
+            ApplicationPermissionMode mode,
+            String packageFqn, 
+            String className, 
+            String memberName);
+
+    P newPermission(
+            ApplicationRole holder, 
+            ApplicationPermissionRule rule, 
+            ApplicationPermissionMode mode,
+            ApplicationFeatureType featureType, 
+            String featureFqn);
+    
 
 }

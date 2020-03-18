@@ -25,16 +25,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.apache.isis.applib.services.repository.RepositoryService;
-import org.apache.isis.config.beans.IsisBeanFactoryPostProcessorForSpring;
-import org.apache.isis.extensions.fixtures.fixturescripts.FixtureScripts;
-import org.apache.isis.testdomain.Smoketest;
-import org.apache.isis.testdomain.conf.Configuration_usingJdo;
-import org.apache.isis.testdomain.jdo.Inventory;
-import org.apache.isis.testdomain.jdo.JdoTestDomainPersona;
-
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.apache.isis.applib.services.repository.RepositoryService;
+import org.apache.isis.core.config.beans.IsisBeanFactoryPostProcessorForSpring;
+import org.apache.isis.testdomain.Smoketest;
+import org.apache.isis.testdomain.conf.Configuration_usingJdo;
+import org.apache.isis.testdomain.jdo.JdoTestDomainPersona;
+import org.apache.isis.testdomain.jdo.entities.JdoInventory;
+import org.apache.isis.testing.fixtures.applib.fixturescripts.FixtureScripts;
 
 import lombok.val;
 
@@ -67,7 +67,7 @@ class JdoBootstrappingTest_usingFixtures {
     @Test
     void sampleInventoryShouldBeSetUp() {
 
-        val inventories = repository.allInstances(Inventory.class);
+        val inventories = repository.allInstances(JdoInventory.class);
         assertEquals(1, inventories.size());
 
         val inventory = inventories.get(0);

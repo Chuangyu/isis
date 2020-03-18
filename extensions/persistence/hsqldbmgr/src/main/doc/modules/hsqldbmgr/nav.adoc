@@ -1,2 +1,0 @@
-include::extensions:hsqldbmgr:partial$component-nav.adoc[]
-

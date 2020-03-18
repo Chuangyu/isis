@@ -51,6 +51,12 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
+		<!-- seems to be required in order for eg DemoApp to launch from within an IDE -->
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -91,44 +97,44 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.isis.core</groupId>
+			<groupId>org.apache.isis.viewer</groupId>
 			<artifactId>isis-viewer-wicket-viewer</artifactId>
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.isis.core</groupId>
+			<groupId>org.apache.isis.viewer</groupId>
 			<artifactId>isis-viewer-restfulobjects-viewer</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.isis.core</groupId>
+			<groupId>org.apache.isis.viewer</groupId>
 			<artifactId>isis-viewer-restfulobjects-jaxrsresteasy4</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.isis.core</groupId>
-			<artifactId>isis-security-api</artifactId>
+			<artifactId>isis-core-security</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.isis.core</groupId>
+			<groupId>org.apache.isis.security</groupId>
 			<artifactId>isis-security-bypass</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.isis.core</groupId>
+			<groupId>org.apache.isis.security</groupId>
 			<artifactId>isis-security-shiro</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.isis.core</groupId>
+			<groupId>org.apache.isis.security</groupId>
 			<artifactId>isis-security-keycloak</artifactId>
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.isis.core</groupId>
+			<groupId>org.apache.isis.persistence</groupId>
 			<artifactId>isis-persistence-jdo-datanucleus5</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.isis.core</groupId>
-			<artifactId>isis-webboot-springboot</artifactId>
+			<artifactId>isis-core-runtimeservices</artifactId>
 		</dependency>
 
 	</dependencies>

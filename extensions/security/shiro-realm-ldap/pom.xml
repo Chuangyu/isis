@@ -29,30 +29,14 @@
 
     <artifactId>isis-extensions-shiro-realm-ldap</artifactId>
 
-    <name>Apache Isis Ext - Shiro LDAP Realm</name>
+    <name>Apache Isis Ext - Security - Shiro LDAP Realm (parent)</name>
 	<description>
         Implementation of Shiro Realm using LDAP.
     </description>
+    <packaging>pom</packaging>
 
-    <properties>
-        <jar-plugin.automaticModuleName>org.apache.isis.extensions.shirorealmldap</jar-plugin.automaticModuleName>
-        <git-plugin.propertiesDir>org/apache/isis/extensions/shirorealmldap</git-plugin.propertiesDir>
-    </properties>
-
-
-    <dependencies>
-    
-        <dependency>
-            <groupId>org.apache.isis.core</groupId>
-            <artifactId>isis-security-shiro</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.isis.core</groupId>
-            <artifactId>isis-unittestsupport</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
+    <modules>
+        <module>impl</module>
+    </modules>
 
 </project>

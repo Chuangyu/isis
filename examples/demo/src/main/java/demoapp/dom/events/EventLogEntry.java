@@ -28,11 +28,12 @@ import javax.jdo.annotations.PersistenceCapable;
 import org.apache.isis.applib.annotation.DomainObject;
 import org.apache.isis.applib.annotation.Editing;
 import org.apache.isis.applib.annotation.Property;
-import org.apache.isis.applib.events.domain.AbstractDomainEvent;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+
+import demoapp.dom.events.EventsDemo.UiButtonEvent;
 
 @PersistenceCapable(identityType = IdentityType.DATASTORE, schema = "demo" )
 @DatastoreIdentity(strategy = IdGeneratorStrategy.IDENTITY, column = "id")
@@ -44,9 +45,9 @@ public class EventLogEntry {
     @Getter @Setter
     private String event;
 
-    public static EventLogEntry of(AbstractDomainEvent<?> ev) {
+    public static EventLogEntry of(UiButtonEvent even) {
         val x = new EventLogEntry();
-        x.setEvent(LocalDateTime.now().toString()+" - "+ev.getClass().getSimpleName());
+        x.setEvent("Button clicked " + LocalDateTime.now().toString());
         return x;
     }
 

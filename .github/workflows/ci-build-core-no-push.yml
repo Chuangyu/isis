@@ -40,8 +40,6 @@ jobs:
     
     - name: Setup Script Environment
       shell: bash
-      # we write the more tricky varibles to the $SHARED_VARS_FILE using the full power of bash commands
-      # then we simply print all the (non-secret) variables as used by the build scripts to the console
       run: |
         echo ==============  ENV  =================
         echo BASELINE         \: $BASELINE

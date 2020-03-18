@@ -1,33 +1,61 @@
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+
 site:
   title: Apache Isis
   url: https://isis.apache.org/
-  start_page: toc:ROOT:about.adoc
+  start_page: docs:ROOT:about.adoc
 
 content:
   sources:
 
 # antora
     - url: .
-      start_path: antora/components/toc
+      start_path: antora/components/docs # docs
       branches: HEAD
-
-# core
+# examples
     - url: .
-      start_path: core/viewers/wicket/src/main/doc # vw
+      start_path: examples/demo/src/main/adoc # docs
       branches: HEAD
 
 # extensions
     - url: .
-      start_path: extensions/vw/asciidoc/src/main/doc # vw
+      start_path: extensions/vw/exceldownload/adoc # vw
       branches: HEAD
     - url: .
-      start_path: extensions/vw/exceldownload/src/main/doc # vw
+      start_path: extensions/vw/fullcalendar/adoc # vw
       branches: HEAD
     - url: .
-      start_path: extensions/vw/markdown/src/main/doc # vw
+      start_path: extensions/vw/pdfjs/adoc # vw
       branches: HEAD
+
+# mavendeps
     - url: .
-      start_path: extensions/vw/sse/src/main/doc # vw
+      start_path: mavendeps/adoc # docs
+      branches: HEAD
+
+# starters
+    - url: .
+      start_path: starters/adoc # docs
+      branches: HEAD
+
+# viewers
+    - url: .
+      start_path: viewers/wicket/src/main/adoc # vw
       branches: HEAD
 
 
@@ -44,7 +72,6 @@ asciidoc:
     - asciidoctor-plantuml
     - ./antora/lib/lorem
     - ./antora/lib/jira-issue
-    - ./antora/lib/powershell
   attributes:
     experimental: ""
     idprefix: ""

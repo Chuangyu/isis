@@ -1,4 +1,23 @@
 #!/bin/bash
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+
+
+
 #
 # usage: ./verify_isis_release.sh [nexus_repo_number] [isis_version]
 #
@@ -8,12 +27,14 @@
 #
 #
 # prereqs:
-#    curl or wget
+#    curl
 #    gpg
 #    unzip
-#    jdk 7
-#    mvn 3.5.0+
+#    jdk 8
+#    mvn 3.6.0+
 #
+
+# shellcheck disable=SC2164
 
 _execmustpass(){
     echo $@
@@ -63,7 +84,10 @@ _unpack(){
 _build(){
     echo 'Removing Isis from local repo '$module
     rm -rf ~/.m2/repository/org/apache/isis
-    for module in ./isis*/ ./*archetype*/
+
+    echo 'Building'
+    # previously there were multiple directories, now just the one.
+    for module in ./isis*/
     do
         pushd $module
         _execmustpass mvn clean install -Dskip.git
@@ -71,40 +95,36 @@ _build(){
     done
 }
 
-_generate_simpleapp(){
-    ISISCPN=simpleapp
-    rm -rf test-$ISISCPN
-    mkdir test-$ISISCPN
-    pushd test-$ISISCPN
+_download_simpleapp(){
+    APP=simpleapp
+    BRANCH=master
 
-    _execmustpass mvn archetype:generate  \
-        -D archetypeCatalog=local \
-        -D groupId=com.mycompany \
-        -D artifactId=myapp \
-        -D archetypeGroupId=org.apache.isis.archetype \
-        -D archetypeArtifactId=$ISISCPN-archetype \
-        -B
+    rm -rf test-$APP
+    mkdir test-$APP
+    pushd test-$APP
 
-    pushd myapp
+    REPO=isis-app-$APP
+    curl "https://codeload.github.com/apache/$REPO/zip/$BRANCH" | jar xv
+    mv $REPO-$BRANCH $REPO
+
+    pushd $REPO
     _execmustpass mvn clean install
     popd; popd
 }
 
-_generate_helloworld(){
-    ISISCPN=helloworld
-    rm -rf test-$ISISCPN
-    mkdir test-$ISISCPN
-    pushd test-$ISISCPN
+_download_helloworld(){
+    APP=helloworld
+    BRANCH=master
 
-    _execmustpass mvn archetype:generate  \
-        -D archetypeCatalog=local \
-        -D groupId=com.mycompany \
-        -D artifactId=myapp \
-        -D archetypeGroupId=org.apache.isis.archetype \
-        -D archetypeArtifactId=$ISISCPN-archetype \
-        -B
+    rm -rf test-$APP
+    mkdir test-$APP
+    pushd test-$APP
 
-    pushd myapp
+    REPO=isis-app-$APP
+    curl "https://codeload.github.com/apache/$REPO/zip/$BRANCH" | jar xv
+    mv $REPO-$BRANCH $REPO
+
+    pushd $REPO
     _execmustpass mvn clean install
     popd; popd
 }
@@ -139,8 +159,6 @@ fi
 
 cat <<EOF >/tmp/url.txt
 http://repository.apache.org/content/repositories/orgapacheisis-$NEXUSREPONUM/org/apache/isis/core/isis/$VERSION/isis-$VERSION-source-release.zip
-http://repository.apache.org/content/repositories/orgapacheisis-$NEXUSREPONUM/org/apache/isis/archetype/helloworld-archetype/$VERSION/helloworld-archetype-$VERSION-source-release.zip
-http://repository.apache.org/content/repositories/orgapacheisis-$NEXUSREPONUM/org/apache/isis/archetype/simpleapp-archetype/$VERSION/simpleapp-archetype-$VERSION-source-release.zip
 EOF
 
 # The work starts here
@@ -148,21 +166,23 @@ _download
 _verify
 _unpack
 _build
-_generate_simpleapp
-_generate_helloworld
+_download_simpleapp
+_download_helloworld
 
 # print instructions for final testing
 clear
 cat <<EOF
 
-# Test out simpleapp using:
-pushd test-simpleapp/myapp
-mvn -pl webapp jetty:run
+# Test out helloworld using:
+pushd test-helloworld/isis-app-helloworld
+mvn clean install
+mvn spring-boot:run
 popd
 
-# Test out helloworld using:
-pushd test-helloworld/myapp
-mvn jetty:run
+# Test out simpleapp using:
+pushd test-simpleapp/isis-app-simpleapp
+mvn clean install
+mvn -pl webapp spring-boot:run
 popd
 
 EOF

@@ -22,16 +22,32 @@ import org.apache.isis.extensions.secman.api.IsisModuleExtSecmanApi;
 
 public interface ApplicationTenancy {
 
-    public static abstract class PropertyDomainEvent<T> extends IsisModuleExtSecmanApi.PropertyDomainEvent<ApplicationTenancy, T> {}
-
-    public static abstract class CollectionDomainEvent<T> extends IsisModuleExtSecmanApi.CollectionDomainEvent<ApplicationTenancy, T> {}
-
-    public static abstract class ActionDomainEvent extends IsisModuleExtSecmanApi.ActionDomainEvent<ApplicationTenancy> {}
-
-
-
     public static final int MAX_LENGTH_PATH = 255;
     public static final int MAX_LENGTH_NAME = 40;
     public static final int TYPICAL_LENGTH_NAME = 20;
+    
+    // -- DOMAIN EVENTS
+    
+    public static abstract class PropertyDomainEvent<T> extends IsisModuleExtSecmanApi.PropertyDomainEvent<ApplicationTenancy, T> {}
+    public static abstract class CollectionDomainEvent<T> extends IsisModuleExtSecmanApi.CollectionDomainEvent<ApplicationTenancy, T> {}
+    public static abstract class ActionDomainEvent extends IsisModuleExtSecmanApi.ActionDomainEvent<ApplicationTenancy> {}
+    
+    public static class AddUserDomainEvent extends ActionDomainEvent {}
+    public static class RemoveUserDomainEvent extends ActionDomainEvent {}
+    public static class AddChildDomainEvent extends ActionDomainEvent {}
+    public static class DeleteDomainEvent extends ActionDomainEvent {}
+    public static class RemoveChildDomainEvent extends ActionDomainEvent {}
+    public static class UpdateNameDomainEvent extends ActionDomainEvent {}
+    public static class UpdateParentDomainEvent extends ActionDomainEvent {}
+    
+    // -- MODEL
+    
+    public String getPath();
+
+    public String getName();
+    public void setName(String name);
+
+    public ApplicationTenancy getParent();
+    
 
 }

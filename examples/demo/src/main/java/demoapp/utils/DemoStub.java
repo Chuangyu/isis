@@ -28,14 +28,15 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.apache.isis.applib.annotation.PropertyLayout;
-import org.apache.isis.extensions.asciidoc.applib.value.AsciiDoc;
+import org.apache.isis.core.commons.internal.base._Strings;
+import org.apache.isis.valuetypes.asciidoc.applib.value.AsciiDoc;
 
 import lombok.val;
 
 public abstract class DemoStub {
 
     public String title() {
-        return getClass().getSimpleName();
+        return _Strings.asNaturalName2.apply(getClass().getSimpleName());
     }
 
     public abstract void initDefaults();
@@ -45,11 +46,11 @@ public abstract class DemoStub {
         return AsciiDoc.valueOfAdoc(readAsciiDocDescription());
     }
 
-    protected final static Map<String, String> constants = createConstants();
+    protected static final Map<String, String> constants = createConstants();
     private static Map<String, String> createConstants() {
         val map = new HashMap<String, String>();
         map.put("SOURCES_ISIS", "https://github.com/apache/isis/blob/master/core/applib/src/main/java");
-        map.put("SOURCES_DEMO", "https://github.com/apache/isis/tree/master/examples/apps/demo/src/main/java");
+        map.put("SOURCES_DEMO", "https://github.com/apache/isis/tree/master/examples/demo/src/main/java");
         map.put("ISSUES_DEMO", "https://issues.apache.org/jira/"); 
         return map;
     }
