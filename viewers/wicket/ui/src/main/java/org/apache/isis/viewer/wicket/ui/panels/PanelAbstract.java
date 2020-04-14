@@ -25,7 +25,6 @@ import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
-import org.apache.isis.applib.annotation.SemanticsOf;
 import org.apache.isis.viewer.wicket.ui.ComponentType;
 import org.apache.isis.viewer.wicket.ui.util.Components;
 
@@ -103,14 +102,5 @@ extends PanelBase/*<IModel<X>>*/ {
         }
         component.setVisible(visible);
     }
-    
-    protected void addConfirmationDialogIfAreYouSureSemantics(
-            Component component, 
-            SemanticsOf semanticsOf) {
-        
-        PanelUtil.addConfirmationDialogIfAreYouSureSemantics(
-                super.getTranslationService(), component, semanticsOf);
-    }
-
 
 }

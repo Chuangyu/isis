@@ -35,8 +35,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.isis.applib.services.i18n.TranslationService;
 import org.apache.isis.core.commons.internal.base._Casts;
 import org.apache.isis.core.commons.internal.base._Strings;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.core.runtime.session.init.InitialisationSession;
 import org.apache.isis.viewer.wicket.viewer.wicketapp.IsisWicketApplication;
 
@@ -48,8 +48,8 @@ import lombok.val;
  */
 public class LocalizerForIsis extends Localizer {
 
-    @Inject private IsisSessionTracker isisSessionTracker;
-    @Inject private IsisSessionFactory isisSessionFactory;
+    @Inject private IsisInteractionTracker isisInteractionTracker;
+    @Inject private IsisInteractionFactory isisInteractionFactory;
     @Inject private TranslationService translationService;
     
     /**
@@ -76,10 +76,10 @@ public class LocalizerForIsis extends Localizer {
     protected String translate(final String key, final Component component) {
         final Class<?> contextClass = determineContextClassElse(component, IsisWicketApplication.class);
         final String context = contextClass.getName();
-        if(isisSessionTracker.isInSession()) {
+        if(isisInteractionTracker.isInInteraction()) {
             return translate(key, context);
         } else {
-            return isisSessionFactory.callAuthenticated(new InitialisationSession(), ()->translate(key, context));
+            return isisInteractionFactory.callAuthenticated(new InitialisationSession(), ()->translate(key, context));
         }
     }
 

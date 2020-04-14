@@ -38,6 +38,7 @@ import org.apache.isis.applib.annotation.Optionality;
 import org.apache.isis.applib.annotation.Parameter;
 import org.apache.isis.applib.annotation.ParameterLayout;
 import org.apache.isis.applib.annotation.Programmatic;
+import org.apache.isis.applib.annotation.PromptStyle;
 import org.apache.isis.applib.annotation.Property;
 import org.apache.isis.applib.annotation.PropertyLayout;
 import org.apache.isis.applib.annotation.SemanticsOf;
@@ -64,16 +65,18 @@ public class TooltipDemo extends DemoStub {
     // -- NO ARG
 
     @Action
-    @ActionLayout(describedAs="This is a no-arg action with a tooltip.")
+    @ActionLayout(
+            named = "No Arguments",
+            describedAs="This is a no-arg action with a tooltip.")
     public TooltipDemo noArgAction(){
         return this;
     }
 
     @Action(semantics=SemanticsOf.IDEMPOTENT_ARE_YOU_SURE)
     @ActionLayout(
+            named = "No Arguments With Confirm",
             cssClass="btn-danger",
-            describedAs="This is a no-arg action with a tooltip and 'are you sure' "
-                    + "semantics.")
+            describedAs="This is a no-arg action with a tooltip and 'are you sure' semantics.")
     public TooltipDemo noArgActionWithConfirm(){
         return this;
     }
@@ -81,7 +84,10 @@ public class TooltipDemo extends DemoStub {
     // -- WITH ARG
 
     @Action
-    @ActionLayout(describedAs="This is an action with arguments and a tooltip.")
+    @ActionLayout(
+            named = "With Arguments",
+            describedAs="This is an action with arguments and a tooltip.",
+            promptStyle=PromptStyle.DIALOG_MODAL)
     public TooltipDemo biArgAction(
 
             @Parameter(optionality=Optionality.MANDATORY)
@@ -100,12 +106,37 @@ public class TooltipDemo extends DemoStub {
 
         return this;
     }
+    
+    @Action(semantics=SemanticsOf.IDEMPOTENT_ARE_YOU_SURE)
+    @ActionLayout(
+            named = "With Arguments And Confirm",
+            describedAs="This is an action with arguments, a tooltip and 'are you sure' semantics.",
+            promptStyle=PromptStyle.DIALOG_MODAL)
+    public TooltipDemo biArgActionWithConfirm(
+
+            @Parameter(optionality=Optionality.MANDATORY)
+            @ParameterLayout(
+                    named="first",
+                    describedAs="This is a mandatory parameter with a tooltip.") 
+            String firstArg,
+
+            @Parameter(optionality=Optionality.OPTIONAL)
+            @ParameterLayout(
+                    named="second",
+                    describedAs="This is an optional parameter with a tooltip.") 
+            String secondArg
+
+            ){
+
+        return this;
+    }
+    
 
     // -- DISABLED
 
     @Action
     @ActionLayout(
-            named="Disabled Action", // metamodel validation is picky when method prefix 'disabled' is used
+            named="Disabled",
             describedAs="This is a disabled action with a tooltip.")
     public TooltipDemo disabledAction(){
         return this;
@@ -118,7 +149,7 @@ public class TooltipDemo extends DemoStub {
 
     @Action
     @ActionLayout(
-            named="Disabled Action with Confirmation", // metamodel validation is picky when method prefix 'disabled' is used
+            named="Disabled With Confirm",
             cssClass="btn-danger",
             describedAs="This is a disabled action with a tooltip and 'are you sure' "
                     + "semantics.")
@@ -165,7 +196,7 @@ public class TooltipDemo extends DemoStub {
 
     @PropertyLayout(labelPosition=LabelPosition.NONE)
     public Markup getText2() {
-        return new Markup("Click the above button, and mouse-over then action's "
+        return new Markup("Click the above buttons, and mouse-over the action's "
                 + "parameter lables. Tooltips should pop up.");
     }
 

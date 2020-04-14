@@ -50,10 +50,8 @@ import org.apache.isis.core.metamodel.facets.actions.redirect.RedirectFacet;
 import org.apache.isis.core.metamodel.facets.properties.renderunchanged.UnchangingFacet;
 import org.apache.isis.core.metamodel.spec.ManagedObject;
 import org.apache.isis.core.metamodel.specloader.SpecificationLoader;
-import org.apache.isis.core.runtime.persistence.session.PersistenceSession;
-import org.apache.isis.core.runtime.session.IsisRequestCycle;
-import org.apache.isis.core.runtime.session.IsisSession;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
+import org.apache.isis.core.runtime.events.RuntimeEventService;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
 import org.apache.isis.core.security.authentication.AuthenticationSession;
 import org.apache.isis.core.security.authentication.MessageBroker;
 import org.apache.isis.core.webapp.context.IsisWebAppCommonContext;
@@ -150,14 +148,12 @@ implements FormExecutor {
             // flush any queued changes; any concurrency or violation exceptions will actually be thrown here
             {
                 val commonContext = targetEntityModel.getCommonContext();
-                if(commonContext.getIsisSessionTracker().isInSession()) {
-                    PersistenceSession.current(PersistenceSession.class)
-                    .stream()
-                    .forEach(ps->ps.flush());    
-                }
+                commonContext.getIsisInteractionTracker().currentInteraction()
+                .ifPresent(interaction->{
+                    commonContext.lookupServiceElseFail(RuntimeEventService.class)
+                    .fireInteractionFlushRequest(interaction);
+                });
             }
-            
-
 
             // update target, since version updated (concurrency checks)
             targetAdapter = targetEntityModel.load();
@@ -484,8 +480,8 @@ implements FormExecutor {
         return getCommonContext().getSpecificationLoader();
     }
 
-    protected IsisSessionFactory getIsisSessionFactory() {
-        return getCommonContext().lookupServiceElseFail(IsisSessionFactory.class);
+    protected IsisInteractionFactory getIsisInteractionFactory() {
+        return getCommonContext().lookupServiceElseFail(IsisInteractionFactory.class);
     }
 
     protected AuthenticationSession getAuthenticationSession() {

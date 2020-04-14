@@ -18,7 +18,7 @@
 	<parent>
 		<groupId>org.apache.isis.incubator.viewer</groupId>
 		<artifactId>isis-viewer-vaadin</artifactId>
-		<version>2.0.0-M3-SNAPSHOT</version>
+		<version>2.0.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>isis-viewer-vaadin-model</artifactId>
@@ -59,6 +59,16 @@
 		<dependency>
 			<groupId>org.apache.isis.core</groupId>
 			<artifactId>isis-core-webapp</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.isis.viewer</groupId>
+			<artifactId>isis-viewer-common</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin</artifactId>
 		</dependency>
 
 		<!-- TEST DEPENDENCIES -->

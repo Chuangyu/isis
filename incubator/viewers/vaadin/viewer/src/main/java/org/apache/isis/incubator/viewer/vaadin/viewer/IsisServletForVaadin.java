@@ -28,8 +28,8 @@ import com.vaadin.flow.spring.SpringServlet;
 
 import org.springframework.context.ApplicationContext;
 
-import org.apache.isis.core.runtime.session.IsisSession;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteraction;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
 import org.apache.isis.incubator.viewer.vaadin.ui.auth.AuthSessionStoreUtil;
 
 import lombok.NonNull;
@@ -37,7 +37,7 @@ import lombok.val;
 import lombok.extern.log4j.Log4j2;
 
 /**
- * An extension of {@link SpringServlet} to support {@link IsisSession} life-cycle management.
+ * An extension of {@link SpringServlet} to support {@link IsisInteraction} life-cycle management.
  * @since Mar 14, 2020
  *
  */
@@ -47,14 +47,14 @@ extends SpringServlet {
 
     private static final long serialVersionUID = 1L;
     
-    private final IsisSessionFactory isisSessionFactory;
+    private final IsisInteractionFactory isisInteractionFactory;
 
     public IsisServletForVaadin(
-            @NonNull final IsisSessionFactory isisSessionFactory, 
+            @NonNull final IsisInteractionFactory isisInteractionFactory, 
             @NonNull final ApplicationContext context, 
             final boolean forwardingEnforced) {
         super(context, forwardingEnforced);
-        this.isisSessionFactory = isisSessionFactory;
+        this.isisInteractionFactory = isisInteractionFactory;
     }
    
     
@@ -68,15 +68,22 @@ extends SpringServlet {
         log.debug("new request incoming (authentication={})", authSession);
         
         if(authSession!=null) {
-            isisSessionFactory.runAuthenticated(authSession, ()->{
+            isisInteractionFactory.runAuthenticated(authSession, ()->{
                 super.service(request, response);                
             });
         } else {
-            // do not open an IsisSession, instead redirect to login page
+            // do not open an IsisInteraction, instead redirect to login page
             // this should happen afterwards by means of the VaadinAuthenticationHandler
-            
             super.service(request, response);    
         }
+        
+        log.debug("request was successfully serviced (authentication={})", authSession);
+        
+        if(isisInteractionFactory.isInInteraction()) {
+            isisInteractionFactory.closeSessionStack();
+            log.warn("after servicing current request some interactions have been closed forcefully (authentication={})", authSession);
+        }
+        
     }
   
 

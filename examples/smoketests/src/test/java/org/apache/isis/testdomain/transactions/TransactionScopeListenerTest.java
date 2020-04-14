@@ -30,12 +30,12 @@ import org.springframework.test.context.TestPropertySource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.apache.isis.applib.annotation.IsisSessionScope;
+import org.apache.isis.applib.annotation.IsisInteractionScope;
 import org.apache.isis.applib.services.TransactionScopeListener;
 import org.apache.isis.applib.services.repository.RepositoryService;
 import org.apache.isis.applib.services.xactn.TransactionService;
 import org.apache.isis.core.config.presets.IsisPresets;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
 import org.apache.isis.testdomain.Smoketest;
 import org.apache.isis.testdomain.conf.Configuration_usingJdo;
 import org.apache.isis.testdomain.jdo.JdoTestDomainPersona;
@@ -47,48 +47,48 @@ import org.apache.isis.testing.fixtures.applib.fixturescripts.FixtureScripts;
 @SpringBootTest(
         classes = { 
                 Configuration_usingJdo.class,
-                TransactionScopeListenerTest.IsisSessionScopedProbe.class
+                TransactionScopeListenerTest.IsisInteractionScopedProbe.class
         })
 @TestPropertySource(IsisPresets.UseLog4j2Test)
 /**
- * With this test we manage IsisSessions ourselves. (not sub-classing IsisIntegrationTestAbstract)
+ * With this test we manage IsisInteractions ourselves. (not sub-classing IsisIntegrationTestAbstract)
  */
 class TransactionScopeListenerTest {
     
     @Inject private FixtureScripts fixtureScripts;
     @Inject private TransactionService transactionService;
     @Inject private RepositoryService repository;
-    @Inject private IsisSessionFactory isisSessionFactory;
+    @Inject private IsisInteractionFactory isisInteractionFactory;
     @Inject private KVStoreForTesting kvStoreForTesting;
     
     /* Expectations:
-     * 1. for each IsisSessionScope there should be a new IsisSessionScopedProbe instance
-     * 2. for each Transaction the current IsisSessionScopedProbe should get notified
+     * 1. for each IsisInteractionScope there should be a new IsisInteractionScopedProbe instance
+     * 2. for each Transaction the current IsisInteractionScopedProbe should get notified
      * 
-     * first we have 1 IsisSessionScope with 1 expected Transaction during 'setUp'
-     * then we have 1 IsisSessionScope with 3 expected Transactions within the test method
+     * first we have 1 IsisInteractionScope with 1 expected Transaction during 'setUp'
+     * then we have 1 IsisInteractionScope with 3 expected Transactions within the test method
      *  
      */
     
     @Service
-    @IsisSessionScope
-    public static class IsisSessionScopedProbe implements TransactionScopeListener {
+    @IsisInteractionScope
+    public static class IsisInteractionScopedProbe implements TransactionScopeListener {
 
         @Inject private KVStoreForTesting kvStoreForTesting;
         
         @PostConstruct
         public void init() {
-            kvStoreForTesting.incrementCounter(IsisSessionScopedProbe.class, "init");
+            kvStoreForTesting.incrementCounter(IsisInteractionScopedProbe.class, "init");
         }
         
         @PreDestroy
         public void destroy() {
-            kvStoreForTesting.incrementCounter(IsisSessionScopedProbe.class, "destroy");
+            kvStoreForTesting.incrementCounter(IsisInteractionScopedProbe.class, "destroy");
         }
         
         @Override
         public void onTransactionEnded() {
-            kvStoreForTesting.incrementCounter(IsisSessionScopedProbe.class, "tx");
+            kvStoreForTesting.incrementCounter(IsisInteractionScopedProbe.class, "tx");
         }
         
     }
@@ -96,8 +96,8 @@ class TransactionScopeListenerTest {
     @BeforeEach
     void setUp() {
         
-        // new IsisSessionScope with a new transaction (#1)
-        isisSessionFactory.runAnonymous(()->{
+        // new IsisInteractionScope with a new transaction (#1)
+        isisInteractionFactory.runAnonymous(()->{
         
             // cleanup
             fixtureScripts.runPersona(JdoTestDomainPersona.PurgeAll);
@@ -110,8 +110,8 @@ class TransactionScopeListenerTest {
     @Test
     void sessionScopedProbe_shouldBeReused_andBeAwareofTransactionBoundaries() {
         
-        // new IsisSessionScope
-        isisSessionFactory.runAnonymous(()->{
+        // new IsisInteractionScope
+        isisInteractionFactory.runAnonymous(()->{
             
             // expected pre condition
             // new transaction (#2)
@@ -130,9 +130,9 @@ class TransactionScopeListenerTest {
             
         });
         
-        long totalTransactions = kvStoreForTesting.getCounter(IsisSessionScopedProbe.class, "tx");
-        long totalSessionScopesInitialized = kvStoreForTesting.getCounter(IsisSessionScopedProbe.class, "init");
-        long totalSessionScopesDestroyed = kvStoreForTesting.getCounter(IsisSessionScopedProbe.class, "destroy");
+        long totalTransactions = kvStoreForTesting.getCounter(IsisInteractionScopedProbe.class, "tx");
+        long totalSessionScopesInitialized = kvStoreForTesting.getCounter(IsisInteractionScopedProbe.class, "init");
+        long totalSessionScopesDestroyed = kvStoreForTesting.getCounter(IsisInteractionScopedProbe.class, "destroy");
         
         assertEquals(4, totalTransactions);
         assertEquals(2, totalSessionScopesInitialized);

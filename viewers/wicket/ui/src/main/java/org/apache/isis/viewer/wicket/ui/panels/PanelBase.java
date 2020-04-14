@@ -31,9 +31,11 @@ import org.apache.isis.applib.services.userreg.EmailNotificationService;
 import org.apache.isis.core.config.IsisConfiguration;
 import org.apache.isis.core.config.viewer.wicket.WebAppContextPath;
 import org.apache.isis.core.metamodel.context.MetaModelContext;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
 import org.apache.isis.core.security.authentication.MessageBroker;
 import org.apache.isis.core.webapp.context.IsisWebAppCommonContext;
+import org.apache.isis.viewer.common.model.header.HeaderUiModel;
+import org.apache.isis.viewer.common.model.header.HeaderUiModelProvider;
 import org.apache.isis.viewer.wicket.model.common.CommonContextUtils;
 import org.apache.isis.viewer.wicket.model.hints.UiHintContainer;
 import org.apache.isis.viewer.wicket.model.isis.WicketViewerSettings;
@@ -61,13 +63,14 @@ public class PanelBase<T> extends GenericPanel<T> implements IsisWebAppCommonCon
     private transient ImageResourceCache imageCache;
     private transient MetaModelContext metaModelContext;
     private transient IsisWebAppCommonContext commonContext;
-    private transient IsisSessionFactory isisSessionFactory;
+    private transient IsisInteractionFactory isisInteractionFactory;
     private transient TranslationService translationService;
     private transient LocaleProvider localeProvider;
     private transient TreeThemeProvider treeThemeProvider;
     private transient EmailNotificationService emailNotificationService;
     private transient EmailVerificationUrlService emailVerificationUrlService;
     private transient PageNavigationService pageNavigationService;
+    private transient HeaderUiModelProvider headerUiModelProvider;
     
     protected PanelBase(String id) {
         this(id, null);
@@ -106,8 +109,8 @@ public class PanelBase<T> extends GenericPanel<T> implements IsisWebAppCommonCon
         return metaModelContext = computeIfAbsent(MetaModelContext.class, metaModelContext);
     }
     
-    public IsisSessionFactory getIsisSessionFactory() {
-        return isisSessionFactory = computeIfAbsent(IsisSessionFactory.class, isisSessionFactory);
+    public IsisInteractionFactory getIsisInteractionFactory() {
+        return isisInteractionFactory = computeIfAbsent(IsisInteractionFactory.class, isisInteractionFactory);
     }
     
     public TranslationService getTranslationService() {
@@ -136,6 +139,11 @@ public class PanelBase<T> extends GenericPanel<T> implements IsisWebAppCommonCon
     
     protected MessageBroker getMessageBroker() {
         return commonContext.getAuthenticationSessionTracker().getMessageBrokerElseFail();
+    }
+    
+    protected HeaderUiModel getHeaderModel() {
+        headerUiModelProvider = computeIfAbsent(HeaderUiModelProvider.class, headerUiModelProvider);
+        return headerUiModelProvider.getHeader();
     }
 
     // Hint support

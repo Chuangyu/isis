@@ -41,8 +41,8 @@ import org.springframework.stereotype.Service;
 
 import org.apache.isis.applib.annotation.OrderPrecedence;
 import org.apache.isis.core.commons.internal.collections._Lists;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
 import org.apache.isis.core.runtime.persistence.transaction.IsisTransactionAspectSupport;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
 import org.apache.isis.valuetypes.sse.applib.annotations.SseSource;
 import org.apache.isis.valuetypes.sse.applib.service.SseChannel;
 import org.apache.isis.valuetypes.sse.applib.service.SseService;
@@ -70,7 +70,7 @@ import lombok.extern.log4j.Log4j2;
 public class SseServiceDefault implements SseService {
 
     //@Inject private TransactionService transactionService;
-    @Inject private IsisSessionFactory isisSessionFactory;
+    @Inject private IsisInteractionFactory isisInteractionFactory;
 
     private final EventStreamPool eventStreamPool = new EventStreamPool();
 
@@ -103,7 +103,7 @@ public class SseServiceDefault implements SseService {
             // wait for calling thread to commit its current transaction 
             callingThread_TransactionLatch.await();
 
-            isisSessionFactory.runAnonymous(()->run(task));
+            isisInteractionFactory.runAnonymous(()->run(task));
 
         }, executor);
 

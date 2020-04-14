@@ -51,9 +51,9 @@ import org.apache.isis.core.commons.collections.Can;
 import org.apache.isis.core.commons.internal.exceptions._Exceptions;
 import org.apache.isis.core.metamodel.spec.feature.ObjectMember;
 import org.apache.isis.core.metamodel.specloader.validator.MetaModelInvalidException;
+import org.apache.isis.core.runtime.iactn.IsisInteraction;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
 import org.apache.isis.core.runtime.session.IsisRequestCycle;
-import org.apache.isis.core.runtime.session.IsisSession;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
 import org.apache.isis.core.security.authentication.AuthenticationSession;
 import org.apache.isis.core.security.authentication.MessageBroker;
 import org.apache.isis.core.webapp.context.IsisWebAppCommonContext;
@@ -71,7 +71,7 @@ import lombok.extern.log4j.Log4j2;
 
 /**
  * Isis-specific implementation of the Wicket's {@link RequestCycle},
- * automatically opening a {@link IsisSession} at the beginning of the request
+ * automatically opening a {@link IsisInteraction} at the beginning of the request
  * and committing the transaction and closing the session at the end.
  * 
  * @since 2.0
@@ -106,7 +106,7 @@ public class WebRequestCycleForIsis implements IRequestCycleListener {
         }
 
         val isisRequestCycle = IsisRequestCycle.next(
-                commonContext.lookupServiceElseFail(IsisSessionFactory.class),
+                commonContext.lookupServiceElseFail(IsisInteractionFactory.class),
                 commonContext.createTransactionTemplate());
         
         requestCycle.setMetaData(REQ_CYCLE_HANDLE_KEY, isisRequestCycle);
@@ -303,7 +303,7 @@ public class WebRequestCycleForIsis implements IRequestCycleListener {
 
         final Optional<Recognition> recognition;
         
-        if(inIsisSession()) {
+        if(isInInteraction()) {
             val exceptionRecognizerService = getCommonContext().getServiceRegistry()
             .lookupServiceElseFail(ExceptionRecognizerService.class);
             
@@ -367,7 +367,7 @@ public class WebRequestCycleForIsis implements IRequestCycleListener {
      * Matters should improve once ISIS-299 gets implemented...
      */
     protected boolean isSignedIn() {
-        if(!inIsisSession()) {
+        if(!isInInteraction()) {
             return false;
         }
         if(!getAuthenticationSession().isPresent()) {
@@ -391,8 +391,8 @@ public class WebRequestCycleForIsis implements IRequestCycleListener {
         return getCommonContext().getServiceRegistry().lookupServiceElseFail(ExceptionRecognizerService.class);
     }
 
-    private boolean inIsisSession() {
-        return commonContext.getIsisSessionTracker().isInSession();
+    private boolean isInInteraction() {
+        return commonContext.getIsisInteractionTracker().isInInteraction();
     }
 
     private Optional<AuthenticationSession> getAuthenticationSession() {

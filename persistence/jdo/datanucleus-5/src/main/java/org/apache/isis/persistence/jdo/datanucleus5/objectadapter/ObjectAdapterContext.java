@@ -36,9 +36,9 @@ import org.apache.isis.core.metamodel.spec.ObjectSpecId;
 import org.apache.isis.core.metamodel.spec.ObjectSpecification;
 import org.apache.isis.core.metamodel.spec.feature.OneToManyAssociation;
 import org.apache.isis.core.metamodel.specloader.SpecificationLoader;
-import org.apache.isis.core.runtime.context.session.RuntimeContextBase;
-import org.apache.isis.core.runtime.persistence.session.PersistenceSession;
+import org.apache.isis.core.runtime.context.RuntimeContextBase;
 import org.apache.isis.persistence.jdo.datanucleus5.persistence.IsisPersistenceSessionJdo;
+import org.apache.isis.persistence.jdo.datanucleus5.persistence.PersistenceSession;
 
 import lombok.Getter;
 import lombok.val;

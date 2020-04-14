@@ -18,8 +18,6 @@
  */
 package org.apache.isis.incubator.viewer.vaadin.ui.auth;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
@@ -28,13 +26,13 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
-import com.vaadin.flow.server.VaadinSession;
 
 import org.springframework.stereotype.Component;
 
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
-import org.apache.isis.core.runtime.session.IsisSessionFactory.ThrowingRunnable;
-import org.apache.isis.core.security.authentication.standard.SimpleSession;
+import org.apache.isis.core.metamodel.context.MetaModelContext;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory.ThrowingRunnable;
+import org.apache.isis.core.security.authentication.AuthenticationRequest;
 import org.apache.isis.incubator.viewer.vaadin.ui.pages.login.VaadinLoginView;
 
 import lombok.val;
@@ -51,7 +49,8 @@ public class VaadinAuthenticationHandler implements VaadinServiceInitListener {
 
     private static final long serialVersionUID = 1L;
     
-    @Inject private transient IsisSessionFactory isisSessionFactory; 
+    @Inject private transient IsisInteractionFactory isisInteractionFactory; 
+    @Inject private transient MetaModelContext metaModelContext;
 
     @Override
     public void serviceInit(ServiceInitEvent event) {
@@ -65,38 +64,23 @@ public class VaadinAuthenticationHandler implements VaadinServiceInitListener {
     }
 
     /**
-     * @param userName
-     * @param secret
+     * @param authenticationRequest
      * @return whether login was successful
      */
-    public boolean loginToSession(String userName, String secret) {
-        log.warn("logging in {} not implemented yet", userName);
+    public boolean loginToSession(AuthenticationRequest authenticationRequest) {
+        val authSession = metaModelContext.getAuthenticationManager()
+                .authenticate(authenticationRequest);
+        
+        if(authSession!=null) {
+            log.debug("logging in {}", authSession.getUserName());
+            AuthSessionStoreUtil.put(authSession);
+            return true;
+        }
         return false;
-
-     // TODO actual authentication to be done here ...        
-//        AuthSessionStoreUtil.put(new SimpleSession(userName, Collections.emptyList()));
-//        return true;
     }
-    
-    /** @deprecated early development only */
-    public boolean loginToSessionAsSven() {
-        log.debug("logging in as Sven");
-        AuthSessionStoreUtil.putSven();
-        return true;
-    }
-    
-    public void logoutFromSession() {
-        AuthSessionStoreUtil.get()
-        .ifPresent(authSession->{
-            log.debug("logging out {}", authSession.getUserName());
-            AuthSessionStoreUtil.clear();
-        });
-        VaadinSession.getCurrent().close();
-        isisSessionFactory.closeSessionStack();
-    } 
     
     /**
-     * Executes a piece of code in a new (possibly nested) IsisSession, using the 
+     * Executes a piece of code in a new (possibly nested) IsisInteraction, using the 
      * current AuthenticationSession, as, at this point, should be stored in the 
      * current VaadinSession.
      * 
@@ -105,7 +89,7 @@ public class VaadinAuthenticationHandler implements VaadinServiceInitListener {
      */
     public <R> R callAuthenticated(Callable<R> callable) {
         return AuthSessionStoreUtil.get()
-                .map(authSession->isisSessionFactory.callAuthenticated(authSession, callable))
+                .map(authSession->isisInteractionFactory.callAuthenticated(authSession, callable))
                 .orElse(null); // TODO redirect to login
     }
     
@@ -127,7 +111,7 @@ public class VaadinAuthenticationHandler implements VaadinServiceInitListener {
         
         val authSession = AuthSessionStoreUtil.get().orElse(null);
         if(authSession!=null) {
-            isisSessionFactory.openSession(authSession);
+            isisInteractionFactory.openSession(authSession);
             return; // access granted
         }
         // otherwise redirect to login page
@@ -137,7 +121,7 @@ public class VaadinAuthenticationHandler implements VaadinServiceInitListener {
     }
     
     private void beforeLeave(BeforeLeaveEvent event) {
-        //isisSessionFactory.closeSessionStack();
+        //isisInteractionFactory.closeSessionStack();
     }
 
 

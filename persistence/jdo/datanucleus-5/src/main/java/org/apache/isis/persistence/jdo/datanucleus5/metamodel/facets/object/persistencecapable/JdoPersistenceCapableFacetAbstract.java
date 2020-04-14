@@ -19,6 +19,7 @@
 package org.apache.isis.persistence.jdo.datanucleus5.metamodel.facets.object.persistencecapable;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.jdo.annotations.IdentityType;
 
@@ -26,8 +27,8 @@ import org.apache.isis.core.metamodel.facetapi.Facet;
 import org.apache.isis.core.metamodel.facetapi.FacetAbstract;
 import org.apache.isis.core.metamodel.facetapi.FacetHolder;
 import org.apache.isis.core.metamodel.facets.object.entity.EntityFacet;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.persistence.jdo.datanucleus5.persistence.IsisPersistenceSessionJdo;
-import org.apache.isis.core.runtime.persistence.session.PersistenceSession;
 
 
 public abstract class JdoPersistenceCapableFacetAbstract 
@@ -41,18 +42,21 @@ implements JdoPersistenceCapableFacet {
     private final String schema;
     private final String table;
     private final IdentityType identityType;
+    private final Supplier<IsisInteractionTracker> isisInteractionTracker;
 
     public JdoPersistenceCapableFacetAbstract(
             final String schemaName,
             final String tableOrTypeName,
             final IdentityType identityType,
-            final FacetHolder holder) {
+            final FacetHolder holder,
+            final Supplier<IsisInteractionTracker> isisInteractionTracker) {
         
         super(JdoPersistenceCapableFacetAbstract.type(), holder, Derivation.NOT_DERIVED);
         super.setFacetAliasType(EntityFacet.class);
         this.schema = schemaName;
         this.table = tableOrTypeName;
         this.identityType = identityType;
+        this.isisInteractionTracker = isisInteractionTracker;
     }
 
     @Override
@@ -79,8 +83,8 @@ implements JdoPersistenceCapableFacet {
     }
     
     protected IsisPersistenceSessionJdo getPersistenceSessionJdo() {
-        return PersistenceSession.current(IsisPersistenceSessionJdo.class)
-                .getFirst()
+        return isisInteractionTracker.get().currentInteraction()
+                .map(interaction->interaction.getUserData(IsisPersistenceSessionJdo.class))
                 .orElse(null);
     }
     

@@ -33,18 +33,17 @@ import org.springframework.transaction.support.DefaultTransactionStatus;
 import org.apache.isis.applib.annotation.OrderPrecedence;
 import org.apache.isis.applib.services.eventbus.EventBusService;
 import org.apache.isis.core.commons.internal.exceptions._Exceptions;
-import org.apache.isis.core.runtime.persistence.session.PersistenceSession;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.core.runtime.persistence.transaction.IsisTransactionAspectSupport;
 import org.apache.isis.core.runtime.persistence.transaction.IsisTransactionObject;
-import org.apache.isis.core.runtime.persistence.transaction.IsisTransactionObject.IsisSessionScopeType;
+import org.apache.isis.core.runtime.persistence.transaction.IsisTransactionObject.IsisInteractionScopeType;
 import org.apache.isis.core.runtime.persistence.transaction.events.TransactionAfterBeginEvent;
 import org.apache.isis.core.runtime.persistence.transaction.events.TransactionAfterCommitEvent;
 import org.apache.isis.core.runtime.persistence.transaction.events.TransactionAfterRollbackEvent;
 import org.apache.isis.core.runtime.persistence.transaction.events.TransactionBeforeBeginEvent;
 import org.apache.isis.core.runtime.persistence.transaction.events.TransactionBeforeCommitEvent;
 import org.apache.isis.core.runtime.persistence.transaction.events.TransactionBeforeRollbackEvent;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
 import org.apache.isis.core.runtime.session.init.InitialisationSession;
 
 import lombok.val;
@@ -61,24 +60,24 @@ public class IsisPlatformTransactionManagerForJdo extends AbstractPlatformTransa
 
     private static final long serialVersionUID = 1L;
 
-    private final IsisSessionFactory isisSessionFactory;
+    private final IsisInteractionFactory isisInteractionFactory;
     private final EventBusService eventBusService;
-    private final IsisSessionTracker isisSessionTracker;
+    private final IsisInteractionTracker isisInteractionTracker;
 
     @Inject
     public IsisPlatformTransactionManagerForJdo(
-            final IsisSessionFactory isisSessionFactory,
+            final IsisInteractionFactory isisInteractionFactory,
             final EventBusService eventBusService,
-            final IsisSessionTracker isisSessionTracker) {
-        this.isisSessionFactory = isisSessionFactory;
+            final IsisInteractionTracker isisInteractionTracker) {
+        this.isisInteractionFactory = isisInteractionFactory;
         this.eventBusService = eventBusService;
-        this.isisSessionTracker = isisSessionTracker;
+        this.isisInteractionTracker = isisInteractionTracker;
     }
 
     @Override
     protected Object doGetTransaction() throws TransactionException {
 
-        val isInSession = isisSessionTracker.isInSession();
+        val isInSession = isisInteractionTracker.isInInteraction();
         log.debug("doGetTransaction isInSession={}", isInSession);
 
         val transactionBeforeBegin = 
@@ -91,25 +90,25 @@ public class IsisPlatformTransactionManagerForJdo extends AbstractPlatformTransa
             
             if(Utils.isJUnitTest()) {
             
-                val authenticationSession = isisSessionTracker.currentAuthenticationSession()
+                val authenticationSession = isisInteractionTracker.currentAuthenticationSession()
                         .orElseGet(InitialisationSession::new);
 
                 log.debug("open new session authenticationSession={}", authenticationSession);
-                isisSessionFactory.openSession(authenticationSession);
+                isisInteractionFactory.openSession(authenticationSession);
                 
-                return IsisTransactionObject.of(transactionBeforeBegin, IsisSessionScopeType.TEST_SCOPED);
+                return IsisTransactionObject.of(transactionBeforeBegin, IsisInteractionScopeType.TEST_SCOPED);
                 
                 
             } else {
 
-                throw _Exceptions.illegalState("No IsisSession available. "
-                        + "Transactions are expected to be nested within the life-cycle of an IsisSession.");
+                throw _Exceptions.illegalState("No IsisInteraction available. "
+                        + "Transactions are expected to be nested within the life-cycle of an IsisInteraction.");
                 
             }
             
         }
 
-        return IsisTransactionObject.of(transactionBeforeBegin, IsisSessionScopeType.REQUEST_SCOPED);
+        return IsisTransactionObject.of(transactionBeforeBegin, IsisInteractionScopeType.REQUEST_SCOPED);
 
     }
 
@@ -160,17 +159,18 @@ public class IsisPlatformTransactionManagerForJdo extends AbstractPlatformTransa
     private void cleanUp(IsisTransactionObject txObject) {
         txObject.getCountDownLatch().countDown();
         txObject.setCurrentTransaction(null);
-        if(txObject.getIsisSessionScopeType() == IsisSessionScopeType.TEST_SCOPED) {
-            isisSessionFactory.closeSessionStack();
+        if(txObject.getIsisInteractionScopeType() == IsisInteractionScopeType.TEST_SCOPED) {
+            isisInteractionFactory.closeSessionStack();
         }
         IsisTransactionAspectSupport.clearTransactionObject();
     }
     
     private IsisTransactionManagerJdo transactionManagerJdo() {
-        return PersistenceSession.current(IsisPersistenceSessionJdoBase.class)
-                    .getFirst()
-                    .orElseThrow(()->_Exceptions.unrecoverable("no current IsisPersistenceSessionJdoBase available"))
-                    .transactionManager;
+        return isisInteractionTracker.currentInteraction()
+                .map(interaction->interaction.getUserData(IsisPersistenceSessionJdo.class))
+                .map(IsisPersistenceSessionJdoBase.class::cast)
+                .map(ps->ps.transactionManager)
+                .orElseThrow(()->_Exceptions.unrecoverable("no current IsisPersistenceSessionJdoBase available"));
     }
 
 }

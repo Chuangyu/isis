@@ -130,6 +130,9 @@ content:
       start_path: extensions/vw/fullcalendar/adoc # vw
       branches: HEAD
     - url: .
+      start_path: extensions/vw/gmap3/adoc # vw
+      branches: HEAD
+    - url: .
       start_path: extensions/vw/pdfjs/adoc # vw
       branches: HEAD
 
@@ -239,6 +242,9 @@ content:
       start_path: subdomains/pdfbox/adoc # subdomains
       branches: HEAD
     - url: .
+      start_path: subdomains/settings/adoc # subdomains
+      branches: HEAD
+    - url: .
       start_path: subdomains/spring/adoc # subdomains
       branches: HEAD
     - url: .
@@ -313,10 +319,7 @@ asciidoc:
     idprefix: ""
     idseparator: "-"
     plantuml-server-url: "http://www.plantuml.com/plantuml"
-    isiscurr: "2.0.0-M2"
-    isisnext: "2.0.0-M3"
-    isisnextafter: "2.0.0-M4"
-    :isisdevafter: "2.0.0-M4-SNAPSHOT"
+    page-isisrel: "2.0.0-M4"
 
 output:
   dir: antora/target/site

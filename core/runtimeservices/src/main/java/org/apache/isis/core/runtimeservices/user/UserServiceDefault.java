@@ -39,7 +39,7 @@ import org.apache.isis.applib.services.sudo.SudoService;
 import org.apache.isis.applib.services.user.UserService;
 import org.apache.isis.core.commons.collections.Can;
 import org.apache.isis.core.commons.internal.exceptions._Exceptions;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.core.security.authentication.AuthenticationSession;
 
 import lombok.Value;
@@ -52,7 +52,7 @@ import lombok.val;
 @Qualifier("Default")
 public class UserServiceDefault implements UserService {
     
-    @Inject private IsisSessionTracker isisSessionTracker;
+    @Inject private IsisInteractionTracker isisInteractionTracker;
     
     @Service
     @Named("isisMetaModel.UserServiceDefault.SudoServiceSpi")
@@ -96,7 +96,7 @@ public class UserServiceDefault implements UserService {
             return new UserMemento(username, asRoleMementos(roles));
 
         } else {
-            return isisSessionTracker.currentAuthenticationSession()
+            return isisInteractionTracker.currentAuthenticationSession()
             .map(AuthenticationSession::createUserMemento)
             .orElseThrow(()->_Exceptions.illegalState("need an AuthenticationSession to create a UserMemento"));
         }
@@ -123,7 +123,7 @@ public class UserServiceDefault implements UserService {
     // -- HELPER
     
     private Can<String> currentRoles() {
-        return isisSessionTracker.currentAuthenticationSession()
+        return isisInteractionTracker.currentAuthenticationSession()
                 .map(AuthenticationSession::getRoles)
                 .orElse(Can.empty());
     }

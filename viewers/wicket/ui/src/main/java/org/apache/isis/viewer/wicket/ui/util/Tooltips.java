@@ -17,20 +17,29 @@
 
 package org.apache.isis.viewer.wicket.ui.util;
 
+import javax.annotation.Nullable;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.resource.CssResourceReference;
 
 import org.apache.isis.core.commons.internal.base._Strings;
+import org.apache.isis.viewer.common.model.decorator.tooltip.TooltipUiModel;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipBehavior;
-import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig;
+import lombok.NonNull;
+import lombok.val;
+import lombok.experimental.UtilityClass;
+
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverBehavior;
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.OpenTrigger;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 
+@UtilityClass
 public class Tooltips {
 
     /**
@@ -40,45 +49,60 @@ public class Tooltips {
     public static void renderHead(IHeaderResponse response) {
         response.render(CssHeaderItem.forReference(new CssResourceReference(Tooltips.class, "isis-tooltips.css"))); 
     }
-
-    public static void addTooltip(Component target, Model<String> tooltipTextModel) {
-        if(tooltipTextModel==null) {
-            return;
+    
+    /**
+     * Adds popover behavior to the {@code target}, if at least the body is not empty/blank.
+     * @param target
+     * @param tooltipUiModel
+     */
+    public static void addTooltip(
+            @NonNull final Component target,
+            @Nullable final TooltipUiModel tooltipUiModel) {
+        if(tooltipUiModel==null || _Strings.isEmpty(tooltipUiModel.getBody())) {
+            return; // no body so don't render
         }
-        final String tooltipText = tooltipTextModel.getObject();
-        addTooltip(target, tooltipText);
-    }
-
-    public static void addTooltip(Component target, String tooltipText) {
-
-        if(_Strings.isNullOrEmpty(tooltipText)) {
-            return;
-        }
-
-        final TooltipBehavior tooltipBehavior = new TooltipBehavior(
-                Model.of(tooltipText), createTooltipConfig() );
-
+        
+        final IModel<String> labelModel = tooltipUiModel
+                .getLabel()
+                .map(label->Model.of(label))
+                .orElseGet(()->Model.of());  
+        final IModel<String> bodyModel = Model.of(tooltipUiModel.getBody());
+        
+        val tooltipBehavior = createTooltipBehavior(labelModel, bodyModel);
         target.add(new AttributeAppender("class", " isis-component-with-tooltip"));    
         target.add(tooltipBehavior);
     }
 
     public static void clearTooltip(Component target) {
-        target.getBehaviors(TooltipBehavior.class)
+        target.getBehaviors(PopoverBehavior.class)
         .forEach(target::remove);
+    }
+    
+    // -- SHORTCUTS
+    
+    public static void addTooltip(@NonNull Component target, @Nullable String body) {
+        addTooltip(target, _Strings.isEmpty(body)
+                ? null
+                : TooltipUiModel.ofBody(body));
+    }
+
+    public static void addTooltip(@NonNull Component target, @Nullable String label, @Nullable String body) {
+        addTooltip(target, _Strings.isEmpty(body)
+                ? null
+                : TooltipUiModel.of(label, body));
     }
 
     // -- HELPER
-
-    private static TooltipConfig createTooltipConfig() {
-        return new TooltipConfig()
+    
+    private static PopoverBehavior createTooltipBehavior(IModel<String> label, IModel<String> body) {
+        return new PopoverBehavior(label, body, createTooltipConfig());
+    }
+    
+    private static PopoverConfig createTooltipConfig() {
+        return new PopoverConfig()
                 .withTrigger(OpenTrigger.hover)
                 .withPlacement(Placement.bottom)
                 .withAnimation(true);
-
-
     }
-
-
-
 
 }

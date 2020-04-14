@@ -32,16 +32,17 @@ import org.apache.isis.applib.clock.Clock;
 import org.apache.isis.applib.services.clock.ClockService;
 import org.apache.isis.applib.services.session.SessionLoggingService;
 import org.apache.isis.core.commons.collections.Can;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.core.security.authentication.AuthenticationRequest;
 import org.apache.isis.core.security.authentication.AuthenticationRequestPassword;
 import org.apache.isis.core.security.authentication.AuthenticationSession;
 import org.apache.isis.core.security.authentication.manager.AuthenticationManager;
+import org.apache.isis.core.webapp.context.IsisWebAppCommonContext;
 import org.apache.isis.viewer.wicket.model.models.BookmarkedPagesModel;
 import org.apache.isis.viewer.wicket.ui.components.widgets.breadcrumbs.BreadcrumbModel;
 import org.apache.isis.viewer.wicket.ui.components.widgets.breadcrumbs.BreadcrumbModelProvider;
 import org.apache.isis.viewer.wicket.ui.pages.BookmarkedPagesModelProvider;
-import org.apache.isis.core.webapp.context.IsisWebAppCommonContext;
 
 import lombok.Getter;
 import lombok.val;
@@ -121,18 +122,19 @@ implements BreadcrumbModelProvider, BookmarkedPagesModelProvider, IsisWebAppComm
         //        org.apache.isis.core.runtime.authentication.standard.AuthenticationManagerStandard.closeSession(AuthenticationManagerStandard.java:141)
 
         getAuthenticationManager().closeSession(getAuthenticationSession());
-        getIsisSessionFactory().closeSessionStack();
-
+        //getIsisInteractionFactory().closeSessionStack();
+        
         super.invalidateNow();
+        
     }
 
     @Override
     public synchronized void onInvalidate() {
         super.onInvalidate();
 
-        SessionLoggingService.CausedBy causedBy = RequestCycle.get() != null
+        val causedBy = RequestCycle.get() != null
                 ? SessionLoggingService.CausedBy.USER
-                        : SessionLoggingService.CausedBy.SESSION_EXPIRATION;
+                : SessionLoggingService.CausedBy.SESSION_EXPIRATION;
 
         String userName = null;
         if (getAuthenticationSession() != null) {
@@ -144,7 +146,7 @@ implements BreadcrumbModelProvider, BookmarkedPagesModelProvider, IsisWebAppComm
 
     public synchronized AuthenticationSession getAuthenticationSession() {
         
-        commonContext.getIsisSessionTracker().currentAuthenticationSession()
+        commonContext.getIsisInteractionTracker().currentAuthenticationSession()
         .ifPresent(currentAuthenticationSession->{
             
             if (getAuthenticationManager().isSessionValid(currentAuthenticationSession)) {
@@ -244,7 +246,7 @@ implements BreadcrumbModelProvider, BookmarkedPagesModelProvider, IsisWebAppComm
             final SessionLoggingService.CausedBy causedBy) {
 
 
-        val isisSessionFactory = getIsisSessionFactory();
+        val isisInteractionFactory = getIsisInteractionFactory();
         val sessionLoggingServices = getSessionLoggingServices();
 
         final Runnable loggingTask = ()->{
@@ -255,8 +257,8 @@ implements BreadcrumbModelProvider, BookmarkedPagesModelProvider, IsisWebAppComm
             );
         };
 
-        if(isisSessionFactory!=null) {
-            isisSessionFactory.runAnonymous(loggingTask::run);
+        if(isisInteractionFactory!=null) {
+            isisInteractionFactory.runAnonymous(loggingTask::run);
         } else {
             loggingTask.run();
         }
@@ -266,10 +268,13 @@ implements BreadcrumbModelProvider, BookmarkedPagesModelProvider, IsisWebAppComm
         return commonContext.getServiceRegistry().select(SessionLoggingService.class);
     }
     
-    protected IsisSessionFactory getIsisSessionFactory() {
-        return commonContext.lookupServiceElseFail(IsisSessionFactory.class);
+    protected IsisInteractionFactory getIsisInteractionFactory() {
+        return commonContext.lookupServiceElseFail(IsisInteractionFactory.class);
     }
 
+    protected IsisInteractionTracker getIsisInteractionTracker() {
+        return commonContext.getIsisInteractionTracker();
+    }
 
     private Date now() {
         try {

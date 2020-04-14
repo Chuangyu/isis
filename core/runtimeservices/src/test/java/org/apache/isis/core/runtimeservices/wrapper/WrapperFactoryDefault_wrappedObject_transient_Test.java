@@ -74,8 +74,8 @@ import org.apache.isis.core.metamodel.spec.ObjectSpecification;
 import org.apache.isis.core.metamodel.spec.feature.OneToOneAssociation;
 import org.apache.isis.core.metamodel.specloader.SpecificationLoader;
 import org.apache.isis.core.metamodel.specloader.specimpl.dflt.ObjectSpecificationDefault;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.core.runtimeservices.wrapper.dom.employees.Employee;
 import org.apache.isis.core.security.authentication.AuthenticationSessionTracker;
 import org.apache.isis.core.security.authentication.standard.SimpleSession;
@@ -97,8 +97,8 @@ public class WrapperFactoryDefault_wrappedObject_transient_Test {
     @Mock private CommandDtoServiceInternal mockCommandDtoServiceInternal;
     @Mock private ObjectSpecification mockOnType;
     @Mock private SpecificationLoader mockSpecificationLoader;
-    @Mock private IsisSessionFactory mockIsisSessionFactory;
-    @Mock private IsisSessionTracker mockIsisSessionTracker;
+    @Mock private IsisInteractionFactory mockIsisInteractionFactory;
+    @Mock private IsisInteractionTracker mockIsisInteractionTracker;
     @Mock private CommandExecutorService mockCommandExecutorService;
     private AsyncControlService asyncControlService = new AsyncControlService();
     @Mock private FactoryService mockFactoryService;
@@ -143,8 +143,8 @@ public class WrapperFactoryDefault_wrappedObject_transient_Test {
                 .singleton(proxyFactoryService)
                 .singleton(wrapperFactory = createWrapperFactory(proxyFactoryService))
                 .singleton(mockFactoryService)
-                .singleton(mockIsisSessionFactory)
-                .singleton(mockIsisSessionTracker)
+                .singleton(mockIsisInteractionFactory)
+                .singleton(mockIsisInteractionTracker)
                 .singleton(mockTransactionService)
                 .singleton(mockCommandExecutorService)
                 .singleton(mockCommandDtoServiceInternal)

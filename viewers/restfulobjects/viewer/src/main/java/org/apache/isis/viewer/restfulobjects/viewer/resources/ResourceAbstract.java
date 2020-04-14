@@ -43,7 +43,7 @@ import org.apache.isis.core.metamodel.consent.InteractionInitiatedBy;
 import org.apache.isis.core.metamodel.context.MetaModelContext;
 import org.apache.isis.core.metamodel.spec.ManagedObject;
 import org.apache.isis.core.metamodel.specloader.SpecificationLoader;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.viewer.restfulobjects.applib.RepresentationType;
 import org.apache.isis.viewer.restfulobjects.applib.RestfulResponse.HttpStatusCode;
 import org.apache.isis.viewer.restfulobjects.rendering.RestfulObjectsApplicationException;
@@ -58,7 +58,7 @@ public abstract class ResourceAbstract {
 
     protected final MetaModelContext metaModelContext;
     protected final IsisConfiguration isisConfiguration;
-    protected final IsisSessionTracker isisSessionTracker;
+    protected final IsisInteractionTracker isisInteractionTracker;
 
     @Context HttpHeaders httpHeaders;
     @Context UriInfo uriInfo;
@@ -72,11 +72,11 @@ public abstract class ResourceAbstract {
     protected ResourceAbstract(
             final MetaModelContext metaModelContext,
             final IsisConfiguration isisConfiguration,
-            final IsisSessionTracker isisSessionTracker) {
+            final IsisInteractionTracker isisInteractionTracker) {
         
         this.metaModelContext = metaModelContext;
         this.isisConfiguration = isisConfiguration;
-        this.isisSessionTracker = isisSessionTracker;
+        this.isisInteractionTracker = isisInteractionTracker;
     }
     
     // -- FACTORIES
@@ -106,7 +106,7 @@ public abstract class ResourceAbstract {
             final ResourceDescriptor resourceDescriptor,
             final String urlUnencodedQueryString) {
         
-        if (!isisSessionTracker.isInSession()) {
+        if (!isisInteractionTracker.isInInteraction()) {
             throw RestfulObjectsApplicationException.create(HttpStatusCode.UNAUTHORIZED);
         }
 

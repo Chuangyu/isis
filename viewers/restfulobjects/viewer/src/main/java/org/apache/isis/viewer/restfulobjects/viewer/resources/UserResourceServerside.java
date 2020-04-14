@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
 import org.apache.isis.applib.annotation.Where;
 import org.apache.isis.core.config.IsisConfiguration;
 import org.apache.isis.core.metamodel.context.MetaModelContext;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.viewer.restfulobjects.applib.JsonRepresentation;
 import org.apache.isis.viewer.restfulobjects.applib.RepresentationType;
 import org.apache.isis.viewer.restfulobjects.applib.RestfulMediaType;
@@ -41,7 +41,7 @@ import org.apache.isis.viewer.restfulobjects.rendering.Caching;
 import org.apache.isis.viewer.restfulobjects.rendering.Responses;
 import org.apache.isis.viewer.restfulobjects.rendering.RestfulObjectsApplicationException;
 import org.apache.isis.viewer.restfulobjects.rendering.service.RepresentationService;
-import org.apache.isis.viewer.restfulobjects.viewer.webmodule.IsisRestfulObjectsSessionFilter;
+import org.apache.isis.viewer.restfulobjects.viewer.webmodule.IsisRestfulObjectsInteractionFilter;
 
 import lombok.val;
 
@@ -52,8 +52,8 @@ public class UserResourceServerside extends ResourceAbstract implements UserReso
     public UserResourceServerside(
             final MetaModelContext metaModelContext,
             final IsisConfiguration isisConfiguration,
-            final IsisSessionTracker isisSessionTracker) {
-        super(metaModelContext, isisConfiguration, isisSessionTracker);
+            final IsisInteractionTracker isisInteractionTracker) {
+        super(metaModelContext, isisConfiguration, isisInteractionTracker);
     }
 
     @Override
@@ -104,7 +104,7 @@ public class UserResourceServerside extends ResourceAbstract implements UserReso
         // we also redirect to home page with special query string; this allows the session filter
         // to clear out any cookies/headers (eg if BASIC auth in use).
         try {
-            final URI location = new URI("?" + IsisRestfulObjectsSessionFilter.ISIS_SESSION_FILTER_QUERY_STRING_FORCE_LOGOUT);
+            final URI location = new URI("?" + IsisRestfulObjectsInteractionFilter.ISIS_SESSION_FILTER_QUERY_STRING_FORCE_LOGOUT);
             return Response.temporaryRedirect(location).build();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);

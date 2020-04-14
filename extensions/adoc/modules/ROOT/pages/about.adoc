@@ -7,7 +7,7 @@
 This catalog lists a number of extensions to the framework.
 These typically are for use directly within by the domain application itself.
 
-There are also a number of extensions documented elsewhere in other guides:
+For convenience, some of the extensions catalogued here are incorporated in other guides:
 
 * in the xref:security:ROOT:about.adoc[security] guide, and the xref:vw:ROOT:about.adoc[wicket viewer] guide).
 +

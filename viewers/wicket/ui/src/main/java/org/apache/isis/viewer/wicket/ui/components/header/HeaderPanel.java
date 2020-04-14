@@ -18,28 +18,25 @@
  */
 package org.apache.isis.viewer.wicket.ui.components.header;
 
-import java.util.Locale;
-
-import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.Page;
-import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
-import org.apache.isis.applib.annotation.DomainServiceLayout;
-import org.apache.isis.applib.services.userprof.UserProfileService;
+import org.apache.isis.viewer.common.model.branding.BrandingUiModel;
+import org.apache.isis.viewer.common.model.header.HeaderUiModel;
+import org.apache.isis.viewer.common.model.menu.MenuUiModel;
+import org.apache.isis.viewer.common.model.userprofile.UserProfileUiModel;
 import org.apache.isis.viewer.wicket.model.common.PageParametersUtils;
 import org.apache.isis.viewer.wicket.model.models.ServiceActionsModel;
 import org.apache.isis.viewer.wicket.ui.ComponentType;
 import org.apache.isis.viewer.wicket.ui.components.widgets.navbar.BrandLogo;
 import org.apache.isis.viewer.wicket.ui.components.widgets.navbar.BrandName;
-import org.apache.isis.viewer.wicket.ui.components.widgets.navbar.Placement;
 import org.apache.isis.viewer.wicket.ui.pages.error.ErrorPage;
 import org.apache.isis.viewer.wicket.ui.panels.PanelAbstract;
 import org.apache.isis.viewer.wicket.ui.util.Components;
+import org.apache.isis.viewer.wicket.ui.util.CssClassAppender;
 
 import lombok.val;
 
@@ -68,9 +65,11 @@ public class HeaderPanel extends PanelAbstract<Model<String>> {
     protected void onInitialize() {
         super.onInitialize();
 
-        addApplicationName();
-        addUserName();
-        addServiceActionMenuBars();
+        val headerUiModel = super.getHeaderModel();
+        
+        addApplicationName(headerUiModel.getBranding());
+        addUserName(headerUiModel.getUserProfile());
+        addServiceActionMenuBars(headerUiModel);
     }
 
     @Override
@@ -81,71 +80,45 @@ public class HeaderPanel extends PanelAbstract<Model<String>> {
         setVisible(parameters.get(PageParametersUtils.ISIS_NO_HEADER_PARAMETER_NAME).isNull());
     }
 
-    protected void addApplicationName() {
-        Class<? extends Page> homePage = getApplication().getHomePage();
-        final BookmarkablePageLink<Void> applicationNameLink = new BookmarkablePageLink<>("applicationName", homePage);
-
-        final Placement placement = Placement.HEADER;
-        final BrandLogo brandImage = new BrandLogo("brandLogo", placement);
-        final BrandName brandName = new BrandName("brandText", Placement.HEADER);
-        applicationNameLink.add(brandName, brandImage);
+    protected void addApplicationName(BrandingUiModel branding) {
+        val homePage = getApplication().getHomePage();
+        val applicationNameLink = new BookmarkablePageLink<Void>("applicationName", homePage);
+        applicationNameLink.add(
+                new BrandName("brandText", branding),
+                new BrandLogo("brandLogo", branding));
 
         add(applicationNameLink);
     }
 
-
-    protected void addUserName() {
-        final UserProfileService userProfileService = getUserProfileService();
-        final Label userName = new Label(ID_USER_NAME, userProfileService.userProfileName());
+    protected void addUserName(UserProfileUiModel userProfile) {
+        val userName = new Label(ID_USER_NAME, userProfile.getUserProfileName());
         add(userName);
     }
 
-    private UserProfileService getUserProfileService() {
-        
-        val commonContext = super.getCommonContext();
-        
-        return new UserProfileService() {
-            @Override
-            public String userProfileName() {
-                if(getPage() instanceof ErrorPage) {
-                    return commonContext.getAuthenticationSessionTracker()
-                            .getAuthenticationSessionElseFail()
-                            .getUserName();
-                }
-                try {
-                    val userProfileService = commonContext.lookupServiceElseFail(UserProfileService.class);
-                    return userProfileService.userProfileName();
-                } catch (final Exception e) {
-                    return commonContext.getAuthenticationSessionTracker()
-                            .getAuthenticationSessionElseFail()
-                            .getUserName();
-                }
-            }
-        };
-    }
-
-    protected void addServiceActionMenuBars() {
+    protected void addServiceActionMenuBars(HeaderUiModel headerUiModel) {
         if (getPage() instanceof ErrorPage) {
             Components.permanentlyHide(this, ID_PRIMARY_MENU_BAR);
             Components.permanentlyHide(this, ID_SECONDARY_MENU_BAR);
-            addMenuBar(this, ID_TERTIARY_MENU_BAR, DomainServiceLayout.MenuBar.TERTIARY);
+            addMenuBar(ID_TERTIARY_MENU_BAR, headerUiModel.getTertiary());
         } else {
-            addMenuBar(this, ID_PRIMARY_MENU_BAR, DomainServiceLayout.MenuBar.PRIMARY);
-            addMenuBar(this, ID_SECONDARY_MENU_BAR, DomainServiceLayout.MenuBar.SECONDARY);
-            addMenuBar(this, ID_TERTIARY_MENU_BAR, DomainServiceLayout.MenuBar.TERTIARY);
+            addMenuBar(ID_PRIMARY_MENU_BAR, headerUiModel.getPrimary());
+            addMenuBar(ID_SECONDARY_MENU_BAR, headerUiModel.getSecondary());
+            addMenuBar(ID_TERTIARY_MENU_BAR, headerUiModel.getTertiary());
         }
     }
 
     private void addMenuBar(
-            final MarkupContainer container, 
-            final String id, 
-            final DomainServiceLayout.MenuBar menuBar) {
+            final String id,
+            final MenuUiModel menuUiModel) {
         
-        final ServiceActionsModel model = new ServiceActionsModel(super.getCommonContext(), menuBar);
-        Component menuBarComponent = getComponentFactoryRegistry().createComponent(ComponentType.SERVICE_ACTIONS, id, model);
-        menuBarComponent.add(AttributeAppender.append("class", menuBar.name().toLowerCase(Locale.ENGLISH)));
+        final MarkupContainer container = this;
+        val menuModel = new ServiceActionsModel(super.getCommonContext(), menuUiModel);
+        val menuBarComponent = getComponentFactoryRegistry()
+                .createComponent(ComponentType.SERVICE_ACTIONS, id, menuModel);
+        menuBarComponent.add(new CssClassAppender(menuUiModel.getCssClass()));
         container.add(menuBarComponent);
-
     }
+    
+
 
 }

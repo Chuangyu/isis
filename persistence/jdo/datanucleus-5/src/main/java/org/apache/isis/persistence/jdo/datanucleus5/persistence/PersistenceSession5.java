@@ -136,8 +136,6 @@ implements IsisLifecycleListener.PersistenceSessionLifecycleManagement {
     public void open() {
         ensureNotOpened();
 
-        openedAtSystemNanos = System.nanoTime();
-
         if (log.isDebugEnabled()) {
             log.debug("opening {}", this);
         }
@@ -578,7 +576,7 @@ implements IsisLifecycleListener.PersistenceSessionLifecycleManagement {
         }
         val spec = adapter.getSpecification();
         if (spec.isManagedBean()) {
-            throw new NotPersistableException("Can only persist entity beans: " + adapter);
+            throw new NotPersistableException("Can only persist entity beans: "+ adapter);
         }
         transactionService.executeWithinTransaction(()->{
             log.debug("persist {}", adapter);               
@@ -586,7 +584,7 @@ implements IsisLifecycleListener.PersistenceSessionLifecycleManagement {
             transactionManager.addCommand(createObjectCommand);
         });
     }
-
+    
     // -- destroyObjectInTransaction
 
 
@@ -634,7 +632,7 @@ implements IsisLifecycleListener.PersistenceSessionLifecycleManagement {
         if (getEntityState(pojo).isAttached()) {
             throw new IllegalArgumentException("Adapter is persistent; adapter: " + adapter);
         }
-        return new DataNucleusCreateObjectCommand(adapter, persistenceManager);
+        return new DataNucleusCreateObjectCommand(adapter, this);
     }
 
     private DestroyObjectCommand newDestroyObjectCommand(final ManagedObject adapter) {
@@ -866,7 +864,6 @@ implements IsisLifecycleListener.PersistenceSessionLifecycleManagement {
             log.debug("refresh immediately; oid={}", oid.enString());
         }
     }
-
 
 }
 

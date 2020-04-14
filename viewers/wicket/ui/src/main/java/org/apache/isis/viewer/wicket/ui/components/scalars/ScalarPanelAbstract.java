@@ -37,8 +37,8 @@ import org.apache.isis.core.commons.internal.collections._Lists;
 import org.apache.isis.core.metamodel.facets.members.cssclass.CssClassFacet;
 import org.apache.isis.core.metamodel.facets.objectvalue.labelat.LabelAtFacet;
 import org.apache.isis.core.metamodel.spec.ManagedObject;
+import org.apache.isis.viewer.common.model.object.ObjectUiModel.RenderingHint;
 import org.apache.isis.viewer.wicket.model.links.LinkAndLabel;
-import org.apache.isis.viewer.wicket.model.models.EntityModel.RenderingHint;
 import org.apache.isis.viewer.wicket.model.models.ScalarModel;
 import org.apache.isis.viewer.wicket.ui.components.actionmenu.entityactions.AdditionalLinksPanel;
 import org.apache.isis.viewer.wicket.ui.components.scalars.TextFieldValueModel.ScalarModelProvider;
@@ -349,7 +349,7 @@ implements ScalarModelProvider {
 
     private static boolean hasActionsPositionedOn(final List<LinkAndLabel> entityActionLinks, final ActionLayout.Position position) {
         for (LinkAndLabel entityActionLink : entityActionLinks) {
-            if(entityActionLink.getPosition() == position) {
+            if(entityActionLink.getActionUiMetaModel().getPosition() == position) {
                 return true;
             }
         }

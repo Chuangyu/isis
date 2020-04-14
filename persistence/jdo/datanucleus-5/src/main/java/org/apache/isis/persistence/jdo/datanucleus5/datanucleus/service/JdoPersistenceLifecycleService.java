@@ -18,6 +18,8 @@
  */
 package org.apache.isis.persistence.jdo.datanucleus5.datanucleus.service;
 
+import java.util.Optional;
+
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -29,15 +31,15 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
 import org.apache.isis.applib.annotation.OrderPrecedence;
-import org.apache.isis.core.commons.internal.context._Context;
 import org.apache.isis.core.commons.internal.exceptions._Exceptions;
 import org.apache.isis.core.config.beans.IsisBeanTypeRegistryHolder;
 import org.apache.isis.core.metamodel.context.MetaModelContext;
-import org.apache.isis.core.runtime.context.session.AppLifecycleEvent;
-import org.apache.isis.core.runtime.context.session.IsisSessionLifecycleEvent;
-import org.apache.isis.core.runtime.persistence.session.PersistenceSession;
-import org.apache.isis.core.runtime.persistence.session.PersistenceSessionFactory;
-import org.apache.isis.core.runtime.session.IsisSession;
+import org.apache.isis.core.runtime.events.app.AppLifecycleEvent;
+import org.apache.isis.core.runtime.events.iactn.IsisInteractionLifecycleEvent;
+import org.apache.isis.core.runtime.iactn.IsisInteraction;
+import org.apache.isis.persistence.jdo.datanucleus5.persistence.IsisPersistenceSessionJdo;
+import org.apache.isis.persistence.jdo.datanucleus5.persistence.PersistenceSession;
+import org.apache.isis.persistence.jdo.datanucleus5.persistence.PersistenceSessionFactory;
 
 import lombok.val;
 import lombok.extern.log4j.Log4j2;
@@ -83,8 +85,8 @@ public class JdoPersistenceLifecycleService {
 
     }
 
-    @EventListener(IsisSessionLifecycleEvent.class)
-    public void onSessionLifecycleEvent(IsisSessionLifecycleEvent event) {
+    @EventListener(IsisInteractionLifecycleEvent.class)
+    public void onSessionLifecycleEvent(IsisInteractionLifecycleEvent event) {
 
         val eventType = event.getEventType();
 
@@ -93,15 +95,15 @@ public class JdoPersistenceLifecycleService {
         }
 
         switch (eventType) {
-        case OPENED:
-            openSession(event.getIsisSession());
+        case HAS_STARTED:
+            openSession(event.getIsisInteraction());
             break;
-        case CLOSING:
-            closeSession(event.getIsisSession());
+        case IS_ENDING:
+            closeSession(event.getIsisInteraction());
             break;
-            //		case sessionFlushing:
-            //			flushSession();
-            //			break;
+        case FLUSH_REQUEST:
+            flushSession(event.getIsisInteraction());
+            break;
 
         default:
             throw _Exceptions.unmatchedCase(eventType);
@@ -111,39 +113,28 @@ public class JdoPersistenceLifecycleService {
 
     // -- HELPER
 
-    private void openSession(IsisSession isisSession) {
-
+    private void openSession(IsisInteraction isisInteraction) {
         val persistenceSession =
                 persistenceSessionFactory.createPersistenceSession();
-
-        // to support static call of PersistenceSession.current(PersistenceSession.class)
-
-        // TODO: review - rather than using a thread-local, and alternative might be to have
-        //  IsisSession provide a "userData" map to allow arbitrary session-scoped objects to be stored there...
-        //  ... of which PersistenceSession is one (the other is IsisTransactionObject).
-        //  Then, only IsisSessionFactory needs to maintain a thread-local (and if we change to some other way of
-        //  finding the current IsisSession, eg from HttpRequest, then there's no impact elsewhere).
-
-        _Context.threadLocalPut(PersistenceSession.class, persistenceSession);
-
+        isisInteraction.putUserData(IsisPersistenceSessionJdo.class, persistenceSession);
         persistenceSession.open();
     }
 
-    private void closeSession(IsisSession isisSession) {
-        PersistenceSession.current(PersistenceSession.class)
-        .getSingleton()
+    private void closeSession(IsisInteraction isisInteraction) {
+        currentSession(isisInteraction)
         .ifPresent(PersistenceSession::close);
-        _Context.threadLocalClear(PersistenceSession.class);
     }
 
-    //	private void flushSession() {
-    //		val persistenceSession = PersistenceSessionJdo.current();
-    //		
-    //		if(persistenceSession != null) {
-    //			persistenceSession.flush();
-    //		}
-    //	}
+    private void flushSession(IsisInteraction isisInteraction) {
+        currentSession(isisInteraction)
+        .ifPresent(PersistenceSession::flush);
+    }
 
+    private Optional<IsisPersistenceSessionJdo> currentSession(IsisInteraction isisInteraction) {
+        return Optional.ofNullable(isisInteraction)
+                .map(interaction->interaction.getUserData(IsisPersistenceSessionJdo.class));
+    }
+    
     private void create() {
         persistenceSessionFactory.init(metaModelContext);
     }

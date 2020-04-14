@@ -38,46 +38,46 @@ public class IsisRestfulObjectsSessionFilter_lookupPassThru_Test {
     @Rule
     public JUnitRuleMockery2 context = JUnitRuleMockery2.createFor(JUnitRuleMockery2.Mode.INTERFACES_AND_CLASSES);
 
-    IsisRestfulObjectsSessionFilter isisSessionFilter;
+    IsisRestfulObjectsInteractionFilter isisInteractionFilter;
 
     @Mock
     FilterConfig mockFilterConfig;
 
     @Before
     public void setUp() throws Exception {
-        isisSessionFilter = new IsisRestfulObjectsSessionFilter();
+        isisInteractionFilter = new IsisRestfulObjectsInteractionFilter();
     }
 
     @Test
     public void when_null() throws Exception {
         context.checking(new Expectations() {{
-            allowing(mockFilterConfig).getInitParameter(IsisRestfulObjectsSessionFilter.PASS_THRU_KEY);
+            allowing(mockFilterConfig).getInitParameter(IsisRestfulObjectsInteractionFilter.PASS_THRU_KEY);
             will(returnValue(null));
         }});
 
-        final List<String> x = isisSessionFilter.lookupAndParsePassThru(mockFilterConfig);
+        final List<String> x = isisInteractionFilter.lookupAndParsePassThru(mockFilterConfig);
         Assert.assertThat(x.size(), is(0));
     }
 
     @Test
     public void when_none() throws Exception {
         context.checking(new Expectations() {{
-            allowing(mockFilterConfig).getInitParameter(IsisRestfulObjectsSessionFilter.PASS_THRU_KEY);
+            allowing(mockFilterConfig).getInitParameter(IsisRestfulObjectsInteractionFilter.PASS_THRU_KEY);
             will(returnValue(""));
         }});
 
-        final List<String> x = isisSessionFilter.lookupAndParsePassThru(mockFilterConfig);
+        final List<String> x = isisInteractionFilter.lookupAndParsePassThru(mockFilterConfig);
         Assert.assertThat(x.size(), is(0));
     }
 
     @Test
     public void when_one() throws Exception {
         context.checking(new Expectations() {{
-            allowing(mockFilterConfig).getInitParameter(IsisRestfulObjectsSessionFilter.PASS_THRU_KEY);
+            allowing(mockFilterConfig).getInitParameter(IsisRestfulObjectsInteractionFilter.PASS_THRU_KEY);
             will(returnValue("/abc"));
         }});
 
-        final List<String> x = isisSessionFilter.lookupAndParsePassThru(mockFilterConfig);
+        final List<String> x = isisInteractionFilter.lookupAndParsePassThru(mockFilterConfig);
         Assert.assertThat(x.size(), is(1));
         Assert.assertThat(x.get(0), is("/abc"));
     }
@@ -85,11 +85,11 @@ public class IsisRestfulObjectsSessionFilter_lookupPassThru_Test {
     @Test
     public void when_several() throws Exception {
         context.checking(new Expectations() {{
-            allowing(mockFilterConfig).getInitParameter(IsisRestfulObjectsSessionFilter.PASS_THRU_KEY);
+            allowing(mockFilterConfig).getInitParameter(IsisRestfulObjectsInteractionFilter.PASS_THRU_KEY);
             will(returnValue("/abc,/def"));
         }});
 
-        final List<String> x = isisSessionFilter.lookupAndParsePassThru(mockFilterConfig);
+        final List<String> x = isisInteractionFilter.lookupAndParsePassThru(mockFilterConfig);
         Assert.assertThat(x.size(), is(2));
         Assert.assertThat(x.get(0), is("/abc"));
         Assert.assertThat(x.get(1), is("/def"));

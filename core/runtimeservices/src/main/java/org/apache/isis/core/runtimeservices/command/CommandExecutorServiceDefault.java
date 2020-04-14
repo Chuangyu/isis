@@ -19,11 +19,9 @@
 package org.apache.isis.core.runtimeservices.command;
 
 import java.sql.Timestamp;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,7 +35,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
 import org.apache.isis.applib.annotation.OrderPrecedence;
-import org.apache.isis.applib.graph.tree.LazyTreeNode;
 import org.apache.isis.applib.services.bookmark.Bookmark;
 import org.apache.isis.applib.services.bookmark.BookmarkService;
 import org.apache.isis.applib.services.clock.ClockService;
@@ -50,27 +47,24 @@ import org.apache.isis.applib.services.sudo.SudoService;
 import org.apache.isis.applib.services.xactn.TransactionService;
 import org.apache.isis.applib.util.schema.CommandDtoUtils;
 import org.apache.isis.applib.util.schema.CommonDtoUtils;
+import org.apache.isis.core.commons.internal.base._NullSafe;
 import org.apache.isis.core.commons.internal.collections._Lists;
 import org.apache.isis.core.commons.internal.exceptions._Exceptions;
 import org.apache.isis.core.metamodel.adapter.oid.Oid;
 import org.apache.isis.core.metamodel.adapter.oid.RootOid;
 import org.apache.isis.core.metamodel.consent.InteractionInitiatedBy;
 import org.apache.isis.core.metamodel.facets.actions.action.invocation.CommandUtil;
-import org.apache.isis.core.metamodel.interactions.InteractionUtils;
-import org.apache.isis.core.metamodel.interactions.VisibilityContext;
 import org.apache.isis.core.metamodel.objectmanager.load.ObjectLoader;
 import org.apache.isis.core.metamodel.spec.ManagedObject;
-import org.apache.isis.core.metamodel.spec.ObjectSpecId;
 import org.apache.isis.core.metamodel.spec.ObjectSpecification;
 import org.apache.isis.core.metamodel.spec.feature.Contributed;
 import org.apache.isis.core.metamodel.spec.feature.ObjectAction;
 import org.apache.isis.core.metamodel.spec.feature.ObjectAssociation;
 import org.apache.isis.core.metamodel.spec.feature.OneToOneAssociation;
 import org.apache.isis.core.metamodel.specloader.SpecificationLoader;
-import org.apache.isis.core.runtime.persistence.session.PersistenceSession;
-import org.apache.isis.core.runtime.session.IsisSession;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
+import org.apache.isis.core.runtime.iactn.IsisInteraction;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.schema.cmd.v2.ActionDto;
 import org.apache.isis.schema.cmd.v2.CommandDto;
 import org.apache.isis.schema.cmd.v2.MemberDto;
@@ -82,6 +76,7 @@ import org.apache.isis.schema.common.v2.OidDto;
 import org.apache.isis.schema.common.v2.OidsDto;
 import org.apache.isis.schema.common.v2.ValueWithTypeDto;
 
+import lombok.Getter;
 import lombok.val;
 import lombok.extern.log4j.Log4j2;
 
@@ -96,6 +91,16 @@ public class CommandExecutorServiceDefault implements CommandExecutorService {
     private static final Pattern ID_PARSER =
             Pattern.compile("(?<className>[^#]+)#?(?<localId>[^(]+)(?<args>[(][^)]*[)])?");
 
+    @Inject private BookmarkService bookmarkService;
+    @Inject private SudoService sudoService;
+    @Inject private ClockService clockService;
+    @Inject private TransactionService transactionService;
+    @Inject private IsisInteractionTracker isisInteractionTracker;
+    @Inject private javax.inject.Provider<InteractionContext> interactionContextProvider;
+    
+    @Inject @Getter private IsisInteractionFactory isisInteractionFactory;
+    @Inject @Getter private SpecificationLoader specificationLoader;
+    
     @Override
     public void executeCommand(
             final CommandExecutorService.SudoPolicy sudoPolicy,
@@ -338,28 +343,23 @@ public class CommandExecutorServiceDefault implements CommandExecutorService {
     }
 
     private List<ManagedObject> argAdaptersFor(final ActionDto actionDto) {
-        
-        val paramDtos = paramDtosFrom(actionDto);
-
-        return paramDtos
-                .stream()
+        return streamParamDtosFrom(actionDto)
                 .map(CommonDtoUtils::getValue)
                 .map(this::adapterFor)
                 .collect(_Lists.toUnmodifiable());
     }
 
-    private static List<ParamDto> paramDtosFrom(final ActionDto actionDto) {
-        final ParamsDto parameters = actionDto.getParameters();
-        if (parameters != null) {
-            final List<ParamDto> parameterList = parameters.getParameter();
-            if (parameterList != null) {
-                return parameterList;
-            }
-        }
-        return Collections.emptyList();
+    private static Stream<ParamDto> streamParamDtosFrom(final ActionDto actionDto) {
+        return Optional.ofNullable(actionDto.getParameters())
+                .map(ParamsDto::getParameter)
+                .map(_NullSafe::stream)
+                .orElseGet(Stream::empty);
     }
 
     private ManagedObject adapterFor(final Object pojo) {
+        if(pojo==null) {
+            return ManagedObject.empty();
+        }
         if(pojo instanceof OidDto) {
             return adapterFor((OidDto)pojo);
         }
@@ -380,39 +380,11 @@ public class CommandExecutorServiceDefault implements CommandExecutorService {
         val objectSpec = specificationLoader.loadSpecification(oid.getObjectSpecId());
         val loadRequest = ObjectLoader.Request.of(objectSpec, oid.getIdentifier());
 
-        Optional<IsisSession> isisSession = isisSessionTracker.currentSession();
-        return isisSession
+        Optional<IsisInteraction> isisInteraction = isisInteractionTracker.currentInteraction();
+        return isisInteraction
                 .map(x -> x.getObjectManager().loadObject(loadRequest))
                 .orElse(null);
     }
 
-
-    // //////////////////////////////////////
-
-    protected IsisSessionFactory getIsisSessionFactory() {
-        return isisSessionFactory;
-    }
-
-    protected PersistenceSession getPersistenceSession() {
-        return PersistenceSession.current(PersistenceSession.class)
-                .getFirst()
-                .orElse(null);
-    }
-
-    protected SpecificationLoader getSpecificationLoader() {
-        return specificationLoader;
-    }
-
-    // -- DEPENDENCIES
-
-    @Inject BookmarkService bookmarkService;
-    @Inject SudoService sudoService;
-    @Inject ClockService clockService;
-    @Inject TransactionService transactionService;
-    @Inject SpecificationLoader specificationLoader;
-    @Inject IsisSessionFactory isisSessionFactory;
-    @Inject IsisSessionTracker isisSessionTracker;
-
-    @Inject private javax.inject.Provider<InteractionContext> interactionContextProvider;
 
 }

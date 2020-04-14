@@ -34,7 +34,7 @@ import javax.ws.rs.core.MediaType;
 import org.springframework.stereotype.Component;
 
 import org.apache.isis.applib.services.swagger.SwaggerService;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
 
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -44,7 +44,7 @@ import lombok.val;
 public class SwaggerSpecResource {
 
     private final SwaggerService swaggerService;
-    private final IsisSessionFactory isisSessionFactory;
+    private final IsisInteractionFactory isisInteractionFactory;
 
     @Context HttpHeaders httpHeaders;
     @Context HttpServletRequest httpServletRequest;
@@ -52,9 +52,9 @@ public class SwaggerSpecResource {
     @Inject
     public SwaggerSpecResource(
             final SwaggerService swaggerService,
-            final IsisSessionFactory isisSessionFactory) {
+            final IsisInteractionFactory isisInteractionFactory) {
         this.swaggerService = swaggerService;
-        this.isisSessionFactory = isisSessionFactory;
+        this.isisInteractionFactory = isisInteractionFactory;
     }
 
     @Path("/private")
@@ -92,7 +92,7 @@ public class SwaggerSpecResource {
         val format = deriveFrom(httpHeaders);
         val callable = new MyCallable(swaggerService, visibility, format);
         
-        val spec = isisSessionFactory.callAnonymous(callable);
+        val spec = isisInteractionFactory.callAnonymous(callable);
         return spec;
     }
 

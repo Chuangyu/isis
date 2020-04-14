@@ -39,6 +39,7 @@ import org.apache.isis.applib.domain.DomainObjectList;
 import org.apache.isis.applib.services.bookmark.Bookmark;
 import org.apache.isis.applib.services.repository.EntityState;
 import org.apache.isis.core.commons.collections.Can;
+import org.apache.isis.core.commons.internal.base._Lazy;
 import org.apache.isis.core.commons.internal.base._NullSafe;
 import org.apache.isis.core.commons.internal.base._Tuples.Indexed;
 import org.apache.isis.core.commons.internal.collections._Arrays;
@@ -156,18 +157,40 @@ public interface ManagedObject {
 
     // -- SIMPLE
 
-    @Value @RequiredArgsConstructor(staticName="of") @EqualsAndHashCode(of = "pojo") 
+    @Value 
+    @RequiredArgsConstructor(staticName="of") 
+    @EqualsAndHashCode(of = "pojo")
+    @ToString(of = {"specification", "pojo"}) //ISIS-2317 make sure toString() is without side-effects
     static final class SimpleManagedObject implements ManagedObject {
+        
+        public static ManagedObject identified(
+                @NonNull final ObjectSpecification spec, 
+                final Object pojo, 
+                @NonNull final RootOid rootOid) {
+            val managedObject = SimpleManagedObject.of(spec, pojo);
+            managedObject.rootOidLazy.set(Optional.of(rootOid));
+            return managedObject;
+        }
+        
         @NonNull private final ObjectSpecification specification;
         @NonNull private final Object pojo;
+
+        public Optional<RootOid> getRootOid() {
+            return rootOidLazy.get();
+        }
         
-        @Getter(lazy=true, onMethod = @__(@Override)) 
-        private final Optional<RootOid> rootOid = Optional.ofNullable(ManagedObjectInternalUtil._identify(this));
+        // -- LAZY ID HANDLING
+        private final _Lazy<Optional<RootOid>> rootOidLazy = _Lazy.threadSafe(this::identify);  
+        private Optional<RootOid> identify() {
+            return Optional.ofNullable(ManagedObjectInternalUtil._identify(this));
+        }
+
+        
     }
 
     // -- LAZY
 
-    @ToString(of = {"specification", "pojo"}) @EqualsAndHashCode(of = "pojo")
+    @EqualsAndHashCode(of = "pojo")
     static final class LazyManagedObject implements ManagedObject {
 
         @NonNull private final Function<Class<?>, ObjectSpecification> specLoader;  
@@ -177,12 +200,32 @@ public interface ManagedObject {
         @Getter(lazy=true, onMethod = @__(@Override)) 
         private final Optional<RootOid> rootOid = Optional.ofNullable(ManagedObjectInternalUtil._identify(this));
 
-        @Getter(lazy=true) 
-        private final ObjectSpecification specification = specLoader.apply(pojo.getClass());
+        private final _Lazy<ObjectSpecification> specification = _Lazy.threadSafe(this::loadSpec);
 
         public LazyManagedObject(@NonNull Function<Class<?>, ObjectSpecification> specLoader, @NonNull Object pojo) {
             this.specLoader = specLoader;
             this.pojo = pojo;
+        }
+        
+        @Override
+        public ObjectSpecification getSpecification() {
+            return specification.get();
+        }
+
+        @Override //ISIS-2317 make sure toString() is without side-effects
+        public String toString() {
+            if(specification.isMemoized()) {
+                return String.format("ManagedObject[spec=%s, pojo=%s]",
+                        ""+getSpecification(),
+                        ""+getPojo());
+            }
+            return String.format("ManagedObject[spec=%s, pojo=%s]",
+                    "[lazy not loaded]",
+                    ""+getPojo());
+        }
+        
+        private ObjectSpecification loadSpec() {
+            return specLoader.apply(pojo.getClass());
         }
 
     }
@@ -196,7 +239,7 @@ public interface ManagedObject {
     default String titleString(@Nullable ManagedObject contextAdapterIfAny) {
         return TitleUtil.titleString(this, contextAdapterIfAny);
     }
-
+    
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     static final class TitleUtil {
 
@@ -300,6 +343,21 @@ public interface ManagedObject {
                     specification.getCorrespondingClass(), pojo.getClass(), pojo.toString());
         }
         return new SimpleManagedObject(specification, pojo);
+    }
+    
+    /**
+     * Optimized for cases, when the pojo's specification and rootOid are already available.
+     */
+    public static ManagedObject identified(ObjectSpecification specification, Object pojo, RootOid rootOid) {
+        if(!specification.getCorrespondingClass().isAssignableFrom(pojo.getClass())) {
+            throw _Exceptions.illegalArgument(
+                    "Pojo not compatible with ObjectSpecification, " +
+                    "objectSpec.correspondingClass = %s, " +
+                    "pojo.getClass() = %s, " +
+                    "pojo.toString() = %s",
+                    specification.getCorrespondingClass(), pojo.getClass(), pojo.toString());
+        }
+        return SimpleManagedObject.identified(specification, pojo, rootOid);
     }
 
     /**
@@ -844,6 +902,8 @@ public interface ManagedObject {
         
         return adapter.getSpecification().getBeanSort().isCollection();
     }
+
+
 
 
 

@@ -28,11 +28,12 @@ import org.apache.isis.viewer.wicket.model.links.LinkAndLabel;
 import org.apache.isis.viewer.wicket.model.models.EntityModel;
 import org.apache.isis.viewer.wicket.model.models.ScalarModel;
 import org.apache.isis.viewer.wicket.model.models.ToggledMementosProvider;
-import org.apache.isis.viewer.wicket.ui.components.widgets.linkandlabel.ActionLinkFactory;
 
+import lombok.val;
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public final class LinkAndLabelUtil {
-
-    private LinkAndLabelUtil(){}
 
     public static List<LinkAndLabel> asActionLinks(
             final ScalarModel scalarModel,
@@ -73,12 +74,16 @@ public final class LinkAndLabelUtil {
             final ScalarModel scalarModelIfAny,
             final ToggledMementosProvider toggledMementosProviderIfAny) {
 
-        final ActionLinkFactory linkFactory = new EntityActionLinkFactory(parentEntityModel, scalarModelIfAny);
-
+        val actionLinkFactory = new EntityActionLinkFactory(
+                AdditionalLinksPanel.ID_ADDITIONAL_LINK, 
+                parentEntityModel, 
+                scalarModelIfAny,
+                toggledMementosProviderIfAny);
+        
+        val named = (String)null;
+        
         return _NullSafe.stream(objectActions)
-                .map((ObjectAction objectAction) ->
-                    linkFactory.newLink(
-                        objectAction, AdditionalLinksPanel.ID_ADDITIONAL_LINK, toggledMementosProviderIfAny))
+                .map(objectAction->actionLinkFactory.newActionLink(objectAction, named))
                 .filter(_NullSafe::isPresent)
                 .collect(Collectors.toList());
     }

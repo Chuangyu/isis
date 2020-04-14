@@ -27,12 +27,9 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -91,9 +88,9 @@ import org.apache.isis.core.metamodel.spec.feature.OneToOneAssociation;
 import org.apache.isis.core.metamodel.specloader.SpecificationLoader;
 import org.apache.isis.core.metamodel.specloader.specimpl.ObjectActionMixedIn;
 import org.apache.isis.core.metamodel.specloader.specimpl.dflt.ObjectSpecificationDefault;
-import org.apache.isis.core.runtime.session.IsisSession;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
+import org.apache.isis.core.runtime.iactn.IsisInteraction;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.core.runtimeservices.wrapper.dispatchers.InteractionEventDispatcher;
 import org.apache.isis.core.runtimeservices.wrapper.dispatchers.InteractionEventDispatcherTypeSafe;
 import org.apache.isis.core.runtimeservices.wrapper.handlers.DomainObjectInvocationHandler;
@@ -103,12 +100,11 @@ import org.apache.isis.core.security.authentication.AuthenticationSession;
 import org.apache.isis.core.security.authentication.standard.SimpleSession;
 import org.apache.isis.schema.cmd.v2.CommandDto;
 
-import static org.apache.isis.applib.services.metamodel.MetaModelService.Mode.*;
+import static org.apache.isis.applib.services.metamodel.MetaModelService.Mode.RELAXED;
 import static org.apache.isis.applib.services.wrapper.control.SyncControl.control;
 
 import lombok.Data;
 import lombok.val;
-import lombok.extern.log4j.Log4j2;
 
 /**
  * This service provides the ability to 'wrap' a domain object such that it can
@@ -120,14 +116,14 @@ import lombok.extern.log4j.Log4j2;
 @Order(OrderPrecedence.MIDPOINT)
 @Primary
 @Qualifier("Default")
-@Log4j2
+//@Log4j2
 public class WrapperFactoryDefault implements WrapperFactory {
     
     @Inject private FactoryService factoryService;
     @Inject private MetaModelContext metaModelContext;
     @Inject private SpecificationLoader specificationLoader;
-    @Inject private IsisSessionTracker isisSessionTracker;
-    @Inject private IsisSessionFactory isisSessionFactory;
+    @Inject private IsisInteractionTracker isisInteractionTracker;
+    @Inject private IsisInteractionFactory isisInteractionFactory;
     @Inject private TransactionService transactionService;
     @Inject private CommandExecutorService commandExecutorService;
     @Inject protected ProxyFactoryService proxyFactoryService; // protected to allow JUnit test
@@ -301,8 +297,8 @@ public class WrapperFactoryDefault implements WrapperFactory {
             final AsyncControl<R> asyncControl) {
 
         val executorService = asyncControl.getExecutorService();
-        val isisSession = currentIsisSession();
-        val asyncAuthSession = authSessionFrom(asyncControl, isisSession.getAuthenticationSession());
+        val isisInteraction = currentIsisInteraction();
+        val asyncAuthSession = authSessionFrom(asyncControl, isisInteraction.getAuthenticationSession());
 
         val targetAdapter = memberAndTarget.getTarget();
         val method = memberAndTarget.getMethod();
@@ -329,7 +325,7 @@ public class WrapperFactoryDefault implements WrapperFactory {
         asyncControlService.init(asyncControl, method, Bookmark.from(oidDto));
 
         Future future = executorService.submit(() ->
-                isisSessionFactory.callAuthenticated(asyncAuthSession, () ->
+                isisInteractionFactory.callAuthenticated(asyncAuthSession, () ->
                     transactionService.executeWithinTransaction(() -> {
                         Bookmark bookmark = commandExecutorService.executeCommand(commandDto);
                         if (bookmark != null) {
@@ -500,12 +496,12 @@ public class WrapperFactoryDefault implements WrapperFactory {
     }
 
 
-    private IsisSession currentIsisSession() {
-        return isisSessionTracker.currentSession().orElseThrow(() -> new RuntimeException("No IsisSession is open"));
+    private IsisInteraction currentIsisInteraction() {
+        return isisInteractionTracker.currentInteraction().orElseThrow(() -> new RuntimeException("No IsisInteraction is open"));
     }
 
     private ObjectManager currentObjectManager() {
-        return currentIsisSession().getObjectManager();
+        return currentIsisInteraction().getObjectManager();
     }
 
 }

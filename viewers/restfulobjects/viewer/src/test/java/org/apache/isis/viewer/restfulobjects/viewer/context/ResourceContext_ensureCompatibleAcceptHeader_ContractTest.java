@@ -42,9 +42,9 @@ import org.apache.isis.core.internaltestsupport.jmocking.JUnitRuleMockery2;
 import org.apache.isis.core.metamodel.MetaModelContext_forTesting;
 import org.apache.isis.core.metamodel.context.MetaModelContext;
 import org.apache.isis.core.metamodel.specloader.SpecificationLoader;
-import org.apache.isis.core.runtime.session.IsisSession;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
+import org.apache.isis.core.runtime.iactn.IsisInteraction;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.core.security.authentication.AuthenticationSession;
 import org.apache.isis.core.security.authentication.manager.AuthenticationManager;
 import org.apache.isis.viewer.restfulobjects.applib.RepresentationType;
@@ -62,12 +62,12 @@ public abstract class ResourceContext_ensureCompatibleAcceptHeader_ContractTest 
     @Mock HttpHeaders mockHttpHeaders;
     @Mock HttpServletRequest mockHttpServletRequest;
     @Mock ServletContext mockServletContext;
-    @Mock IsisSessionFactory mockIsisSessionFactory;
-    @Mock IsisSession mockIsisSession;
+    @Mock IsisInteractionFactory mockIsisInteractionFactory;
+    @Mock IsisInteraction mockIsisInteraction;
     @Mock AuthenticationSession mockAuthenticationSession;
     @Mock SpecificationLoader mockSpecificationLoader;
     @Mock WebApplicationContext webApplicationContext;
-    @Mock IsisSessionTracker mockIsisSessionTracker;
+    @Mock IsisInteractionTracker mockIsisInteractionTracker;
     @Mock AuthenticationManager mockAuthenticationManager;
     
     MetaModelContext metaModelContext;
@@ -81,8 +81,8 @@ public abstract class ResourceContext_ensureCompatibleAcceptHeader_ContractTest 
                 .specificationLoader(mockSpecificationLoader)
                 .authenticationSession(mockAuthenticationSession)
                 .singleton(mockAuthenticationManager)
-                .singleton(mockIsisSessionTracker)
-                .singleton(mockIsisSessionFactory)
+                .singleton(mockIsisInteractionTracker)
+                .singleton(mockIsisInteractionFactory)
                 .build();
 
         context.checking(new Expectations() {
@@ -100,7 +100,7 @@ public abstract class ResourceContext_ensureCompatibleAcceptHeader_ContractTest 
                 allowing(mockHttpServletRequest).getQueryString();
                 will(returnValue(""));
                 
-//                allowing(mockIsisSession).getAuthenticationSession();
+//                allowing(mockIsisInteraction).getAuthenticationSession();
 //                will(returnValue(mockAuthenticationSession));
                 
             }

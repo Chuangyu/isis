@@ -17,7 +17,7 @@
 	<parent>
 		<groupId>org.apache.isis.viewer</groupId>
 		<artifactId>isis-viewer-restfulobjects</artifactId>
-		<version>2.0.0-M3-SNAPSHOT</version>
+		<version>2.0.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>isis-viewer-restfulobjects-jaxrsresteasy4</artifactId>
@@ -120,9 +120,13 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- JDO API -->
 		<dependency>
-			<groupId>javax.jdo</groupId>
-			<artifactId>jdo-api</artifactId>
+			<!-- v3.2 not available yet, use datanucleus staging for now -->
+			<!-- <groupId>javax.jdo</groupId> -->
+			<!-- <artifactId>jdo-api</artifactId> -->
+			<groupId>org.datanucleus</groupId>
+			<artifactId>javax.jdo</artifactId>
 			<scope>test</scope>
 		</dependency>
 

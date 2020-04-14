@@ -37,10 +37,9 @@ import org.apache.isis.core.internaltestsupport.jmocking.JUnitRuleMockery2.Mode;
 import org.apache.isis.core.metamodel.MetaModelContext_forTesting;
 import org.apache.isis.core.metamodel.context.MetaModelContext;
 import org.apache.isis.core.metamodel.specloader.SpecificationLoader;
-import org.apache.isis.core.runtime.persistence.session.PersistenceSession;
-import org.apache.isis.core.runtime.session.IsisSession;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
+import org.apache.isis.core.runtime.iactn.IsisInteraction;
+import org.apache.isis.core.runtime.iactn.IsisInteractionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.core.security.authentication.AuthenticationSession;
 import org.apache.isis.core.security.authentication.manager.AuthenticationManager;
 import org.apache.isis.viewer.restfulobjects.applib.JsonRepresentation;
@@ -53,16 +52,15 @@ public class ResourceContext_getArg_Test {
 
     @Rule public JUnitRuleMockery2 context = JUnitRuleMockery2.createFor(Mode.INTERFACES_AND_CLASSES);
 
-    @Mock HttpServletRequest mockHttpServletRequest;
-    @Mock ServletContext mockServletContext;
-    @Mock IsisSession mockIsisSession;
-    @Mock IsisSessionFactory mockIsisSessionFactory;
-    @Mock IsisSessionTracker mockIsisSessionTracker;
-    @Mock AuthenticationManager mockAuthenticationManager;
-    @Mock AuthenticationSession mockAuthenticationSession;
-    @Mock PersistenceSession mockPersistenceSession;
-    @Mock SpecificationLoader mockSpecificationLoader;
-    @Mock WebApplicationContext webApplicationContext;
+    @Mock private HttpServletRequest mockHttpServletRequest;
+    @Mock private ServletContext mockServletContext;
+    @Mock private IsisInteraction mockIsisInteraction;
+    @Mock private IsisInteractionFactory mockIsisInteractionFactory;
+    @Mock private IsisInteractionTracker mockIsisInteractionTracker;
+    @Mock private AuthenticationManager mockAuthenticationManager;
+    @Mock private AuthenticationSession mockAuthenticationSession;
+    @Mock private SpecificationLoader mockSpecificationLoader;
+    @Mock private WebApplicationContext webApplicationContext;
 
     private ResourceContext resourceContext;
     private MetaModelContext metaModelContext;
@@ -74,9 +72,9 @@ public class ResourceContext_getArg_Test {
 
         metaModelContext = MetaModelContext_forTesting.builder()
                 .specificationLoader(mockSpecificationLoader)
-                .singleton(mockIsisSessionFactory)
+                .singleton(mockIsisInteractionFactory)
                 .singleton(mockAuthenticationManager)
-                .singleton(mockIsisSessionTracker)
+                .singleton(mockIsisInteractionTracker)
                 //                .serviceInjector(mockServiceInjector)
                 //                .serviceRegistry(mockServiceRegistry)
                 //                .translationService(mockTranslationService)
@@ -99,7 +97,7 @@ public class ResourceContext_getArg_Test {
                 allowing(mockHttpServletRequest).getQueryString();
                 will(returnValue(""));
                 
-//                allowing(mockIsisSession).getAuthenticationSession();
+//                allowing(mockIsisInteraction).getAuthenticationSession();
 //                will(returnValue(mockAuthenticationSession));
          
         }});

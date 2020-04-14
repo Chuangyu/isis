@@ -18,21 +18,19 @@
  */
 package org.apache.isis.core.runtime.context;
 
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 import org.apache.isis.core.commons.internal.context._Context;
-import org.apache.isis.core.metamodel.specloader.validator.MetaModelInvalidException;
-import org.apache.isis.core.runtime.persistence.session.PersistenceSession;
-import org.apache.isis.core.runtime.session.IsisSession;
-import org.apache.isis.core.runtime.session.IsisSessionFactory;
+import org.apache.isis.core.runtime.iactn.IsisInteraction;
+
+import lombok.experimental.UtilityClass;
 
 /**
- * Provides static access to current context's singletons
- * {@link MetaModelInvalidException} and {@link IsisSessionFactory}.
+ * Context Utility
  */
-public interface IsisContext {
+@UtilityClass
+public final class IsisContext {
 
     /**
      *
@@ -48,28 +46,13 @@ public interface IsisContext {
      * Returns a new CompletableFuture that is asynchronously completed by a task running in the 
      * ForkJoinPool.commonPool() with the value obtained by calling the given Supplier {@code computation}.
      * <p>
-     * If the calling thread is within an open {@link IsisSession} then the ForkJoinPool does make this
+     * If the calling thread is within an open {@link IsisInteraction} then the ForkJoinPool does make this
      * session also available for any forked threads, via means of {@link InheritableThreadLocal}.
      * 
      * @param computation
      */
     public static <T> CompletableFuture<T> compute(Supplier<T> computation){
         return CompletableFuture.supplyAsync(computation);
-    }
-
-    
-    // -- DEPRECATIONS
-
-    /**
-     * FIXME[2058] generally there might be multiple persistence contexts, 
-     * so entity management must be delegated to the ObjectManager, which 
-     * handles persistence of entities individually according to their object-spec
-     * @return framework's currently resolvable PersistenceSessions
-     */
-    @Deprecated
-    public static Optional<PersistenceSession> getPersistenceSession() {
-        return PersistenceSession.current(PersistenceSession.class)
-                .getFirst();
     }
 
 

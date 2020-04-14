@@ -60,7 +60,7 @@ import org.apache.isis.core.metamodel.spec.ObjectSpecId;
 import org.apache.isis.core.metamodel.spec.ObjectSpecification;
 import org.apache.isis.core.metamodel.spec.feature.OneToManyAssociation;
 import org.apache.isis.core.metamodel.spec.feature.OneToOneAssociation;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.viewer.restfulobjects.applib.JsonRepresentation;
 import org.apache.isis.viewer.restfulobjects.applib.Rel;
 import org.apache.isis.viewer.restfulobjects.applib.RepresentationType;
@@ -86,8 +86,8 @@ public class DomainObjectResourceServerside extends ResourceAbstract implements 
     public DomainObjectResourceServerside(
             final MetaModelContext metaModelContext,
             final IsisConfiguration isisConfiguration,
-            final IsisSessionTracker isisSessionTracker) {
-        super(metaModelContext, isisConfiguration, isisSessionTracker);
+            final IsisInteractionTracker isisInteractionTracker) {
+        super(metaModelContext, isisConfiguration, isisInteractionTracker);
         log.debug("<init>");
     }
 

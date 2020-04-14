@@ -42,7 +42,7 @@ import org.apache.isis.core.metamodel.spec.ObjectSpecification;
 import org.apache.isis.core.metamodel.spec.feature.ObjectActionParameter;
 import org.apache.isis.core.metamodel.spec.feature.OneToManyAssociation;
 import org.apache.isis.core.metamodel.spec.feature.OneToOneAssociation;
-import org.apache.isis.core.runtime.session.IsisSessionTracker;
+import org.apache.isis.core.runtime.iactn.IsisInteractionTracker;
 import org.apache.isis.viewer.restfulobjects.applib.JsonRepresentation;
 import org.apache.isis.viewer.restfulobjects.applib.Rel;
 import org.apache.isis.viewer.restfulobjects.applib.RepresentationType;
@@ -84,8 +84,8 @@ public class DomainTypeResourceServerside extends ResourceAbstract implements Do
     public DomainTypeResourceServerside(
             final MetaModelContext metaModelContext,
             final IsisConfiguration isisConfiguration,
-            final IsisSessionTracker isisSessionTracker) {
-        super(metaModelContext, isisConfiguration, isisSessionTracker);
+            final IsisInteractionTracker isisInteractionTracker) {
+        super(metaModelContext, isisConfiguration, isisInteractionTracker);
     }
 
     @Override
