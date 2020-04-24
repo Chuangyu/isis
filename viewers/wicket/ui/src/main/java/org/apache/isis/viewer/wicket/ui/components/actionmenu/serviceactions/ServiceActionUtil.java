@@ -34,6 +34,7 @@ import org.apache.isis.core.metamodel.spec.feature.ObjectAction;
 import org.apache.isis.core.webapp.context.IsisWebAppCommonContext;
 import org.apache.isis.viewer.common.model.action.ActionUiModelFactory;
 import org.apache.isis.viewer.common.model.menu.MenuUiModel;
+import org.apache.isis.viewer.wicket.model.links.LinkAndLabel;
 import org.apache.isis.viewer.wicket.model.models.EntityModel;
 import org.apache.isis.viewer.wicket.ui.pages.PageAbstract;
 import org.apache.isis.viewer.wicket.ui.util.CssClassAppender;
@@ -109,20 +110,20 @@ public final class ServiceActionUtil {
     private static class MenuActionFactoryWkt implements ActionUiModelFactory<AbstractLink> {
 
         @Override
-        public MenuActionWkt newAction(
+        public LinkAndLabel newAction(
                 IsisWebAppCommonContext commonContext, 
                 String named, 
-                ManagedObject serviceAction,
+                ManagedObject actionHolder,
                 ObjectAction objectAction) {
         
-            val serviceModel = EntityModel.ofAdapter(commonContext, serviceAction);
+            val serviceModel = EntityModel.ofAdapter(commonContext, actionHolder);
             
             val actionLinkFactory = new MenuActionLinkFactory(
                     PageAbstract.ID_MENU_LINK, 
                     serviceModel);
             
-            return new MenuActionWkt(
-                    model->actionLinkFactory.newActionLink(objectAction, named).getUiComponent(),
+            return LinkAndLabel.of(
+                    model->actionLinkFactory.newActionLink(model.getObjectAction(), named).getUiComponent(),
                     named,
                     serviceModel,
                     objectAction);

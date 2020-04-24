@@ -21,13 +21,14 @@ package org.apache.isis.viewer.wicket.ui.util;
 import java.util.Optional;
 
 import org.apache.wicket.Component;
+import org.apache.wicket.markup.html.form.Button;
 
 import org.apache.isis.applib.services.i18n.TranslationService;
 import org.apache.isis.core.commons.internal.base._Strings;
 import org.apache.isis.viewer.common.model.action.ActionLinkUiComponentDecorator;
-import org.apache.isis.viewer.common.model.action.ActionUiModel;
 import org.apache.isis.viewer.common.model.decorator.confirm.ConfirmDecorator;
 import org.apache.isis.viewer.common.model.decorator.confirm.ConfirmUiModel;
+import org.apache.isis.viewer.common.model.decorator.danger.DangerDecorator;
 import org.apache.isis.viewer.common.model.decorator.disable.DisableDecorator;
 import org.apache.isis.viewer.common.model.decorator.disable.DisableUiModel;
 import org.apache.isis.viewer.common.model.decorator.fa.FontAwesomeDecorator;
@@ -35,11 +36,16 @@ import org.apache.isis.viewer.common.model.decorator.fa.FontAwesomeUiModel;
 import org.apache.isis.viewer.common.model.decorator.prototyping.PrototypingDecorator;
 import org.apache.isis.viewer.common.model.decorator.tooltip.TooltipDecorator;
 import org.apache.isis.viewer.common.model.decorator.tooltip.TooltipUiModel;
+import org.apache.isis.viewer.wicket.model.links.LinkAndLabel;
 import org.apache.isis.viewer.wicket.ui.components.actionmenu.CssClassFaBehavior;
 
 import lombok.Getter;
 import lombok.val;
 import lombok.experimental.UtilityClass;
+
+import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.confirmation.ConfirmationBehavior;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.confirmation.ConfirmationConfig;
 
 /**
  * 
@@ -52,6 +58,8 @@ public class Decorators {
     @Getter(lazy = true) private final static Disable disable = new Disable();
     @Getter(lazy = true) private final static Prototyping prototyping = new Prototyping();
     @Getter(lazy = true) private final static Confirm confirm = new Confirm();
+    @Getter(lazy = true) private final static Danger danger = new Danger();
+    
     
     @Getter(lazy = true) private final static IconDecorator icon = new IconDecorator();
     @Getter(lazy = true) private final static MissingIconDecorator missingIcon = new MissingIconDecorator();
@@ -94,7 +102,32 @@ public class Decorators {
     public final static class Confirm implements ConfirmDecorator<Component> {
         @Override
         public void decorate(Component uiComponent, ConfirmUiModel confirmUiModel) {
-            Confirmations.addConfirmationDialog(uiComponent, confirmUiModel);
+            
+            val confirmationConfig = new ConfirmationConfig()
+                    .withTitle(confirmUiModel.getTitle())
+                    .withBtnOkLabel(confirmUiModel.getOkLabel())
+                    .withBtnCancelLabel(confirmUiModel.getCancelLabel())
+                    .withBtnOkClass("btn btn-danger")
+                    .withBtnCancelClass("btn btn-default")
+                    .withPlacement(Placement.valueOf(confirmUiModel.getPlacement().name().toLowerCase()));
+            
+            uiComponent.add(new ConfirmationBehavior(confirmationConfig));
+            
+            if(uiComponent instanceof Button) {
+                // ensure dialog ok buttons receive the danger style as well
+                // don't care if expressed twice
+                Decorators.getDanger().decorate(uiComponent);
+            }
+            
+        }
+    }
+    
+    public final static class Danger implements DangerDecorator<Component> {
+        @Override
+        public void decorate(Component uiComponent) {
+            //if(uiComponent instanceof Button) { 
+                uiComponent.add(new CssClassAppender("btn-danger"));
+            //}
         }
     }
     
@@ -126,14 +159,55 @@ public class Decorators {
             super(getTooltip(), getDisable(), getConfirm(), getPrototyping(), getIcon());
         }
 
-        @Override
+        //TODO this is yet the result of refactoring the logic originating from the wicket viewer
+        //I'm not happy with this yet: this code decorates 2 UI components at once which is confusing
+        //also is not generic enough, because wicket still needs to override this in order to decorate
+        //even another UI component
+        private <T extends Component> void commonDecorateMenuItem(
+                final T uiComponent, // UI component #1
+                final LinkAndLabel actionUiModel,
+                final TranslationService translationService) {
+            
+            val actionLinkUiComponent = actionUiModel.getUiComponent(); // UI component #2
+            val actionMeta = actionUiModel.getActionUiMetaModel();
+            
+            val disableUiModel = actionMeta.getDisableUiModel();
+            getDisableDecorator().decorate(uiComponent, disableUiModel);
+            
+            if (disableUiModel.isDisabled()) {
+                getTooltipDecorator().decorate(uiComponent, TooltipUiModel.ofBody(disableUiModel.getReason().orElse(null)));
+                
+            } else {
+
+                if(!_Strings.isNullOrEmpty(actionMeta.getDescription())) {
+                    getTooltipDecorator().decorate(uiComponent, TooltipUiModel.ofBody(actionMeta.getDescription()));
+                }
+                
+                //XXX ISIS-1626, confirmation dialog for no-parameter menu actions
+                if (actionMeta.isRequiresImmediateConfirmation()) {
+                    
+                    val confirmUiModel = ConfirmUiModel.ofAreYouSure(translationService, ConfirmUiModel.Placement.BOTTOM);
+                    getConfirmDecorator().decorate(actionLinkUiComponent, confirmUiModel);
+                    
+                }
+                
+            }
+            
+            if (actionMeta.isPrototyping()) {
+                getPrototypingDecorator().decorate(actionLinkUiComponent);
+            }
+
+        }
+        
+        
         public void decorateMenuItem(
                 final Component uiComponent,
-                final ActionUiModel<? extends Component> actionUiModel,
+                final LinkAndLabel actionUiModel,
                 final TranslationService translationService) {
             
             addCssClassForAction(uiComponent, actionUiModel);
-            super.decorateMenuItem(uiComponent, actionUiModel, translationService);
+            
+            commonDecorateMenuItem(uiComponent, actionUiModel, translationService);
             
             val actionMeta = actionUiModel.getActionUiMetaModel();
             val actionLinkUiComponent = actionUiModel.getUiComponent();
@@ -145,7 +219,7 @@ public class Decorators {
             
         }
         
-        private void addCssClassForAction(Component uiComponent, ActionUiModel<?> actionUiModel) {
+        private void addCssClassForAction(Component uiComponent, LinkAndLabel actionUiModel) {
             val actionMeta = actionUiModel.getActionUiMetaModel();
             uiComponent.add(new CssClassAppender("isis-" 
                     + CssClassAppender.asCssStyle(actionMeta.getActionIdentifier())));

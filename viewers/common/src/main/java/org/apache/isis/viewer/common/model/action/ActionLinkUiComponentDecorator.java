@@ -18,20 +18,14 @@
  */
 package org.apache.isis.viewer.common.model.action;
 
-import org.apache.isis.applib.services.i18n.TranslationService;
-import org.apache.isis.core.commons.internal.base._Strings;
 import org.apache.isis.viewer.common.model.decorator.confirm.ConfirmDecorator;
-import org.apache.isis.viewer.common.model.decorator.confirm.ConfirmUiModel;
-import org.apache.isis.viewer.common.model.decorator.confirm.ConfirmUiModel.Placement;
 import org.apache.isis.viewer.common.model.decorator.disable.DisableDecorator;
 import org.apache.isis.viewer.common.model.decorator.fa.FontAwesomeDecorator;
 import org.apache.isis.viewer.common.model.decorator.prototyping.PrototypingDecorator;
 import org.apache.isis.viewer.common.model.decorator.tooltip.TooltipDecorator;
-import org.apache.isis.viewer.common.model.decorator.tooltip.TooltipUiModel;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 
 /**
  * Decorates a click-able UI component of type {@code <T>} based on an {@link ActionUiModel}.
@@ -49,44 +43,8 @@ public class ActionLinkUiComponentDecorator<T> {
     private final DisableDecorator<T> disableDecorator;
     private final ConfirmDecorator<T> confirmDecorator;
     private final PrototypingDecorator<T> prototypingDecorator;
-    private final FontAwesomeDecorator<T> faDecorator;
+    private final FontAwesomeDecorator<T> iconDecorator;
 
-    //TODO this is yet the result of refactoring the logic originating from the wicket viewer
-    //there is a little design flaw yet: this code decorates 2 UI components at once which is confusing 
-    public void decorateMenuItem(
-            final T uiComponent, // with wicket this is a menu item component
-            final ActionUiModel<? extends T> actionUiModel,
-            final TranslationService translationService) {
-        
-        val actionLinkUiComponent = actionUiModel.getUiComponent();
-        val actionMeta = actionUiModel.getActionUiMetaModel();
-        
-        val disableUiModel = actionMeta.getDisableUiModel();
-        disableDecorator.decorate(uiComponent, disableUiModel);
-        
-        if (disableUiModel.isDisabled()) {
-            tooltipDecorator.decorate(uiComponent, TooltipUiModel.ofBody(disableUiModel.getReason().orElse(null)));
-            
-        } else {
 
-            if(!_Strings.isNullOrEmpty(actionMeta.getDescription())) {
-                tooltipDecorator.decorate(uiComponent, TooltipUiModel.ofBody(actionMeta.getDescription()));
-            }
-            
-            //XXX ISIS-1626, confirmation dialog for no-parameter menu actions
-            if (actionMeta.isRequiresImmediateConfirmation()) {
-                
-                val confirmUiModel = ConfirmUiModel.ofAreYouSure(translationService, Placement.BOTTOM);
-                confirmDecorator.decorate(actionLinkUiComponent, confirmUiModel);
-                
-            }
-            
-        }
-        
-        if (actionMeta.isPrototyping()) {
-            prototypingDecorator.decorate(actionLinkUiComponent);
-        }
-
-    }
 
 }

@@ -22,7 +22,6 @@ import java.util.Collections;
 
 import javax.inject.Inject;
 
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.Div;
@@ -38,8 +37,11 @@ import org.apache.isis.core.metamodel.consent.InteractionInitiatedBy;
 import org.apache.isis.core.metamodel.context.MetaModelContext;
 import org.apache.isis.core.webapp.context.IsisWebAppCommonContext;
 import org.apache.isis.incubator.viewer.vaadin.model.action.ActionVaa;
+import org.apache.isis.incubator.viewer.vaadin.ui.components.UiComponentFactoryVaa;
 import org.apache.isis.incubator.viewer.vaadin.ui.components.collection.TableView;
 import org.apache.isis.incubator.viewer.vaadin.ui.components.object.ObjectFormView;
+import org.apache.isis.incubator.viewer.vaadin.ui.util.LocalResourceUtil;
+import org.apache.isis.viewer.common.model.decorator.fa.FontAwesomeDecorator;
 import org.apache.isis.viewer.common.model.header.HeaderUiModelProvider;
 
 import lombok.val;
@@ -59,6 +61,7 @@ implements BeforeEnterObserver {
     private static final long serialVersionUID = 1L;
     
     private final transient IsisWebAppCommonContext commonContext;
+    private final transient UiComponentFactoryVaa uiComponentFactory;
     private final transient HeaderUiModelProvider headerUiModelProvider;
     private Div pageContent = new Div();
     
@@ -68,17 +71,19 @@ implements BeforeEnterObserver {
     @Inject
     public MainView(
             final MetaModelContext metaModelContext,
+            final UiComponentFactoryVaa uiComponentFactory,
             final HeaderUiModelProvider headerUiModelProvider) {
 
         this.commonContext = IsisWebAppCommonContext.of(metaModelContext);
+        this.uiComponentFactory = uiComponentFactory;
         this.headerUiModelProvider = headerUiModelProvider;
     }
     
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
 
-        UI.getCurrent().getPage().addStyleSheet("context://"
-                + "webjars/font-awesome/4.7.0/css/font-awesome.min.css");
+        val faStyleSheet = LocalResourceUtil.ResourceDescriptor.webjars(FontAwesomeDecorator.FONTAWESOME_RESOURCE);
+        LocalResourceUtil.addStyleSheet(faStyleSheet);
         
         setPrimarySection(Section.NAVBAR);
 
@@ -110,7 +115,7 @@ implements BeforeEnterObserver {
         if (result.getSpecification().isParentedOrFreeCollection()) {
             pageContent.add(TableView.fromCollection(result));
         } else {
-            pageContent.add(new ObjectFormView(result));
+            pageContent.add(new ObjectFormView(uiComponentFactory, result));
         };
     }
 
